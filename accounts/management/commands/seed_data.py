@@ -132,18 +132,25 @@ class Command(BaseCommand):
                 user.set_password('doctor12345')
                 user.save()
 
-                DoctorProfile.objects.create(
+                # Avoid UNIQUE constraint crash if license_number is already used by another test doctor
+                license_num = doc['license']
+                if DoctorProfile.objects.filter(license_number=license_num).exists():
+                    license_num = f"{license_num}-{str(user.id)[:4]}"
+
+                DoctorProfile.objects.get_or_create(
                     user=user,
-                    specialty=doc['specialty'],
-                    bio=doc['bio'],
-                    years_experience=doc['experience'],
-                    consultation_fee=doc['fee'],
-                    license_number=doc['license'],
-                    education=doc['education'],
-                    languages=doc['languages'],
-                    rating=doc['rating'],
-                    total_reviews=doc['reviews'],
-                    is_available=True,
+                    defaults={
+                        'specialty':        doc['specialty'],
+                        'bio':              doc['bio'],
+                        'years_experience': doc['experience'],
+                        'consultation_fee': doc['fee'],
+                        'license_number':   license_num,
+                        'education':        doc['education'],
+                        'languages':        doc['languages'],
+                        'rating':           doc['rating'],
+                        'total_reviews':    doc['reviews'],
+                        'is_available':     True,
+                    }
                 )
 
                 # Mark today's attendance
@@ -232,11 +239,13 @@ class Command(BaseCommand):
                 user.set_password('patient12345')
                 user.save()
 
-                PatientProfile.objects.create(
+                PatientProfile.objects.get_or_create(
                     user=user,
-                    blood_type=pat['blood'],
-                    medical_history=pat['history'],
-                    allergies=pat['allergies'],
+                    defaults={
+                        'blood_type':      pat['blood'],
+                        'medical_history': pat['history'],
+                        'allergies':       pat['allergies'],
+                    }
                 )
 
                 self.stdout.write(self.style.SUCCESS(

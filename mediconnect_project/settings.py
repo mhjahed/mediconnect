@@ -8,18 +8,15 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ════════════════════════════════════════════════════════════
-# CORE SECURITY
-# ════════════════════════════════════════════════════════════
 SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-CHANGE-IN-PRODUCTION')
 DEBUG      = os.getenv('DEBUG', 'True') == 'True'
 
-# Allow all hosts in development
-ALLOWED_HOSTS = ['*'] if DEBUG else os.getenv('ALLOWED_HOSTS', '').split(',')
-
-# ════════════════════════════════════════════════════════════
-# CSRF — Critical for AJAX/Scanner to work
-# ════════════════════════════════════════════════════════════
+ALLOWED_HOSTS = ['*'] if DEBUG else [
+    h.strip() for h in os.getenv('ALLOWED_HOSTS', '.onrender.com').split(',') if h.strip()
+]
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1:8000',
     'http://localhost:8000',
@@ -27,6 +24,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://192.168.0.105:8000',
     'https://192.168.0.105:8443',
     'https://192.168.0.105:8000',
+    'https://*.onrender.com',
 ]
 
 # CSRF Cookie settings — DEFINED ONLY ONCE
