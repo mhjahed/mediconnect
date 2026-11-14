@@ -1,0 +1,645 @@
+<!-- templates/appointments/search_doctor.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Find a Doctor – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB;
+            --blue-dark:#1D4ED8;
+            --dark:#1E293B;
+            --green:#10B981;
+            --amber:#F59E0B;
+            --light:#F8FAFC;
+            --slate:#64748B;
+            --slate-light:#94A3B8;
+            --border:#E2E8F0;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'Inter',sans-serif;
+            background:#F1F5F9;
+            color:var(--dark);
+            min-height:100vh;
+        }
+
+        /* ═══════════════════════════════════════
+           NAV
+        ═══════════════════════════════════════ */
+        .topnav {
+            background:white;
+            border-bottom:1px solid var(--border);
+            padding:0 5%;
+            height:64px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            position:sticky;
+            top:0; z-index:50;
+        }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; letter-spacing:-0.5px; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back {
+            display:flex; align-items:center; gap:6px;
+            font-size:13px; font-weight:600; color:var(--slate);
+            text-decoration:none; padding:8px 14px;
+            border:1px solid var(--border); border-radius:8px;
+            transition:all 0.2s;
+        }
+        .nav-back:hover { color:var(--blue); border-color:var(--blue); }
+
+        /* ═══════════════════════════════════════
+           SEARCH HERO
+        ═══════════════════════════════════════ */
+        .search-hero {
+            background:linear-gradient(135deg, #1E3A8A 0%, #2563EB 60%, #0EA5E9 100%);
+            padding:48px 5% 56px;
+            text-align:center;
+            position:relative;
+            overflow:hidden;
+        }
+
+        .search-hero::before {
+            content:'';
+            position:absolute;
+            top:-100px; right:-100px;
+            width:300px; height:300px;
+            background:rgba(255,255,255,0.06);
+            border-radius:50%;
+        }
+
+        .search-hero::after {
+            content:'';
+            position:absolute;
+            bottom:-80px; left:-80px;
+            width:240px; height:240px;
+            background:rgba(255,255,255,0.04);
+            border-radius:50%;
+        }
+
+        .hero-inner {
+            position:relative; z-index:1;
+            max-width:780px; margin:0 auto;
+        }
+
+        .search-hero h1 {
+            font-size:clamp(28px, 4vw, 42px);
+            font-weight:900;
+            color:white;
+            letter-spacing:-1px;
+            margin-bottom:10px;
+        }
+
+        .search-hero p {
+            font-size:15px;
+            color:rgba(255,255,255,0.75);
+            margin-bottom:32px;
+        }
+
+        .search-box {
+            background:white;
+            border-radius:14px;
+            padding:6px;
+            display:flex;
+            gap:6px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.2);
+        }
+
+        .search-input-wrap {
+            flex:1;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 14px;
+        }
+
+        .search-input-wrap i { font-size:18px; color:#94A3B8; }
+
+        .search-input {
+            flex:1; border:none; outline:none;
+            font-size:14px; color:var(--dark);
+            font-family:'Inter',sans-serif;
+        }
+
+        .search-input::placeholder { color:#CBD5E1; }
+
+        .specialty-select {
+            border:none; outline:none;
+            font-size:13px; color:var(--slate);
+            background:var(--light); border-radius:10px;
+            padding:10px 14px; cursor:pointer;
+            font-family:'Inter',sans-serif;
+        }
+
+        .search-btn {
+            background:linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color:white; border:none;
+            border-radius:10px;
+            padding:12px 24px;
+            font-size:14px; font-weight:700;
+            font-family:'Inter',sans-serif;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            gap:6px;
+            white-space:nowrap;
+        }
+
+        /* ═══════════════════════════════════════
+           STATS BAR
+        ═══════════════════════════════════════ */
+        .stats-bar {
+            background:white;
+            border-bottom:1px solid var(--border);
+            padding:14px 5%;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:14px;
+            flex-wrap:wrap;
+        }
+
+        .results-count { font-size:13px; color:var(--slate); }
+        .results-count strong { color:var(--dark); font-size:15px; }
+
+        .filter-pills {
+            display:flex; gap:6px; flex-wrap:wrap;
+        }
+
+        .filter-pill {
+            display:flex; align-items:center; gap:5px;
+            background:var(--light);
+            border:1px solid var(--border);
+            border-radius:100px;
+            padding:5px 12px;
+            font-size:11px; font-weight:600;
+            color:var(--slate);
+            cursor:pointer; text-decoration:none;
+            white-space:nowrap;
+            transition:all 0.2s;
+        }
+        .filter-pill.active,
+        .filter-pill:hover {
+            background:var(--blue); color:white; border-color:var(--blue);
+        }
+
+        /* ═══════════════════════════════════════
+           CONTENT
+        ═══════════════════════════════════════ */
+        .content {
+            max-width:1280px;
+            margin:0 auto;
+            padding:36px 5%;
+        }
+
+        /* ═══════════════════════════════════════
+           ✨ MODERN DOCTOR CARD ✨
+        ═══════════════════════════════════════ */
+        .doctors-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+            gap:22px;
+        }
+
+        .doctor-card {
+            background:white;
+            border-radius:18px;
+            overflow:hidden;
+            transition:all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display:flex; flex-direction:column;
+            position:relative;
+            border:1px solid var(--border);
+        }
+
+        .doctor-card:hover {
+            transform:translateY(-6px);
+            box-shadow:0 20px 50px rgba(37,99,235,0.15);
+            border-color:rgba(37,99,235,0.3);
+        }
+
+        /* ── Header with avatar centered ── */
+        .card-top {
+            padding:24px 24px 0;
+            text-align:center;
+            position:relative;
+        }
+
+        /* Availability badge top-right */
+        .available-badge {
+            position:absolute;
+            top:16px; right:16px;
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            background:#ECFDF5;
+            color:#047857;
+            font-size:10px;
+            font-weight:700;
+            padding:4px 10px;
+            border-radius:100px;
+            border:1px solid #A7F3D0;
+        }
+        .avail-dot {
+            width:6px; height:6px;
+            background:var(--green);
+            border-radius:50%;
+            box-shadow:0 0 6px rgba(16,185,129,0.6);
+        }
+
+        /* Avatar centered with ring */
+        .avatar-wrap {
+            position:relative;
+            width:88px; height:88px;
+            margin:0 auto 14px;
+        }
+
+        .avatar-ring {
+            position:absolute; inset:-4px;
+            border-radius:50%;
+            background:linear-gradient(135deg, var(--blue), var(--green));
+            padding:3px;
+        }
+
+        .doctor-avatar {
+            width:100%; height:100%;
+            border-radius:50%;
+            background:linear-gradient(135deg, var(--blue), #3B82F6);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:28px;
+            font-weight:900;
+            color:white;
+            border:4px solid white;
+            position:relative;
+            z-index:1;
+        }
+
+        .doctor-avatar img {
+            width:100%; height:100%;
+            object-fit:cover;
+            border-radius:50%;
+        }
+
+        /* Verified checkmark */
+        .verified-tick {
+            position:absolute;
+            bottom:0; right:0;
+            width:24px; height:24px;
+            background:var(--blue);
+            color:white;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:13px;
+            border:3px solid white;
+            z-index:2;
+        }
+
+        /* Name & specialty */
+        .doctor-name {
+            font-size:17px;
+            font-weight:800;
+            color:var(--dark);
+            letter-spacing:-0.3px;
+            margin-bottom:4px;
+            line-height:1.3;
+        }
+
+        .specialty-tag {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            background:#EFF6FF;
+            color:var(--blue);
+            font-size:11px;
+            font-weight:700;
+            padding:4px 12px;
+            border-radius:100px;
+            margin-bottom:12px;
+        }
+
+        .specialty-tag i { font-size:13px; }
+
+        /* Rating row */
+        .rating-row {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:6px;
+            margin-bottom:16px;
+        }
+
+        .stars {
+            display:flex;
+            gap:1px;
+        }
+
+        .star {
+            font-size:13px;
+            color:#FCD34D;
+        }
+        .star.empty { color:#E2E8F0; }
+
+        .rating-num {
+            font-size:13px;
+            font-weight:700;
+            color:var(--dark);
+        }
+
+        .review-count {
+            font-size:12px;
+            color:var(--slate);
+        }
+
+        /* Bio */
+        .doctor-bio {
+            font-size:13px;
+            color:var(--slate);
+            line-height:1.55;
+            padding:0 24px;
+            margin-bottom:18px;
+            display:-webkit-box;
+            -webkit-line-clamp:2;
+            -webkit-box-orient:vertical;
+            overflow:hidden;
+            text-align:center;
+            min-height:42px;
+        }
+
+        /* ═══════════════════════════════════════
+           META BAR — 3 stats with subtle separator
+        ═══════════════════════════════════════ */
+        .meta-bar {
+            display:flex;
+            background:#F8FAFC;
+            border-top:1px solid var(--border);
+            border-bottom:1px solid var(--border);
+            padding:14px 0;
+            margin-bottom:0;
+        }
+
+        .meta-stat {
+            flex:1;
+            text-align:center;
+            position:relative;
+        }
+
+        .meta-stat:not(:last-child)::after {
+            content:'';
+            position:absolute;
+            right:0; top:15%; bottom:15%;
+            width:1px;
+            background:var(--border);
+        }
+
+        .meta-icon {
+            width:28px; height:28px;
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            margin:0 auto 4px;
+            font-size:15px;
+        }
+
+        .meta-icon.exp     { background:#FEF3C7; color:#92400E; }
+        .meta-icon.patients{ background:#DBEAFE; color:#1E40AF; }
+        .meta-icon.fee     { background:#D1FAE5; color:#065F46; }
+
+        .meta-label {
+            font-size:10px;
+            color:var(--slate-light);
+            font-weight:600;
+            text-transform:uppercase;
+            letter-spacing:0.5px;
+            margin-bottom:2px;
+        }
+
+        .meta-value {
+            font-size:14px;
+            font-weight:800;
+            color:var(--dark);
+        }
+
+        .meta-value.green { color:var(--green); }
+
+        /* ═══════════════════════════════════════
+           BOOK BUTTON
+        ═══════════════════════════════════════ */
+        .card-footer {
+            padding:16px 20px;
+        }
+
+        .book-btn {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            background:linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color:white;
+            text-decoration:none;
+            padding:12px;
+            border-radius:11px;
+            font-size:13px;
+            font-weight:700;
+            transition:all 0.25s;
+            box-shadow:0 4px 14px rgba(37,99,235,0.3);
+        }
+
+        .book-btn:hover {
+            transform:translateY(-1px);
+            box-shadow:0 8px 24px rgba(37,99,235,0.45);
+        }
+
+        .book-btn i { font-size:16px; }
+
+        /* ═══════════════════════════════════════
+           EMPTY STATE
+        ═══════════════════════════════════════ */
+        .empty-state {
+            text-align:center;
+            padding:80px 30px;
+            grid-column:1/-1;
+        }
+        .empty-icon { font-size:56px; margin-bottom:16px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .empty-sub { font-size:14px; color:var(--slate); }
+
+        @media(max-width:640px) {
+            .search-box { flex-direction:column; }
+            .specialty-select { width:100%; }
+            .doctors-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:home' %}" class="nav-back">
+        <i class='bx bx-arrow-back'></i> Dashboard
+    </a>
+</nav>
+
+<!-- HERO -->
+<div class="search-hero">
+    <div class="hero-inner">
+        <h1>Find Your Doctor</h1>
+        <p>Search from {{ result_count }} verified medical specialists</p>
+
+        <form method="GET" action="{% url 'appointments:search' %}">
+            <div class="search-box">
+                <div class="search-input-wrap">
+                    <i class='bx bx-search'></i>
+                    <input type="text" name="q" class="search-input"
+                           placeholder="Search doctor name or condition..."
+                           value="{{ query }}" autocomplete="off"/>
+                </div>
+                <select name="specialty" class="specialty-select">
+                    <option value="">All Specialties</option>
+                    {% for code, label in specialties %}
+                    <option value="{{ code }}" {% if specialty == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="search-btn">
+                    <i class='bx bx-search'></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- STATS / FILTERS -->
+<div class="stats-bar">
+    <div class="results-count">
+        Showing <strong>{{ result_count }}</strong> doctor{{ result_count|pluralize }}
+        {% if query %}for "<strong>{{ query }}</strong>"{% endif %}
+    </div>
+    <div class="filter-pills">
+        <a href="{% url 'appointments:search' %}" class="filter-pill {% if not specialty %}active{% endif %}">All</a>
+        {% for code, label in specialties %}
+        <a href="?specialty={{ code }}" class="filter-pill {% if specialty == code %}active{% endif %}">
+            {{ label }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DOCTOR GRID — Beautiful modern cards
+═══════════════════════════════════════ -->
+<div class="content">
+    <div class="doctors-grid">
+
+        {% for doctor in doctors %}
+        <div class="doctor-card">
+
+            <!-- Top section: avatar + name -->
+            <div class="card-top">
+
+                {% if doctor.doctor_profile.is_available %}
+                <div class="available-badge">
+                    <span class="avail-dot"></span> Available
+                </div>
+                {% endif %}
+
+                <!-- Centered avatar with ring + verified tick -->
+                <div class="avatar-wrap">
+                    <div class="avatar-ring"></div>
+                    <div class="doctor-avatar">
+                        {% if doctor.profile_picture %}
+                        <img src="{{ doctor.profile_picture.url }}" alt="{{ doctor.get_full_name }}"/>
+                        {% else %}
+                        {{ doctor.first_name|slice:":1" }}{{ doctor.last_name|slice:":1" }}
+                        {% endif %}
+                    </div>
+                    <div class="verified-tick" title="Verified">
+                        <i class='bx bx-check'></i>
+                    </div>
+                </div>
+
+                <!-- Name -->
+                <div class="doctor-name">Dr. {{ doctor.get_full_name }}</div>
+
+                <!-- Specialty -->
+                {% if doctor.doctor_profile %}
+                <div class="specialty-tag">
+                    <i class='bx bx-plus-medical'></i>
+                    {{ doctor.doctor_profile.get_specialty_display }}
+                </div>
+
+                <!-- Rating with stars -->
+                <div class="rating-row">
+                    <div class="stars">
+                        {% with rating=doctor.doctor_profile.rating %}
+                        {% if rating >= 1 %}<span class="star">★</span>{% else %}<span class="star empty">★</span>{% endif %}
+                        {% if rating >= 2 %}<span class="star">★</span>{% else %}<span class="star empty">★</span>{% endif %}
+                        {% if rating >= 3 %}<span class="star">★</span>{% else %}<span class="star empty">★</span>{% endif %}
+                        {% if rating >= 4 %}<span class="star">★</span>{% else %}<span class="star empty">★</span>{% endif %}
+                        {% if rating >= 4.5 %}<span class="star">★</span>{% else %}<span class="star empty">★</span>{% endif %}
+                        {% endwith %}
+                    </div>
+                    <span class="rating-num">{{ doctor.doctor_profile.rating }}</span>
+                    <span class="review-count">({{ doctor.doctor_profile.total_reviews }})</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Bio -->
+            {% if doctor.doctor_profile.bio %}
+            <p class="doctor-bio">{{ doctor.doctor_profile.bio }}</p>
+            {% else %}
+            <p class="doctor-bio">Experienced specialist providing quality healthcare services.</p>
+            {% endif %}
+
+            <!-- Meta bar with 3 stats -->
+            {% if doctor.doctor_profile %}
+            <div class="meta-bar">
+                <div class="meta-stat">
+                    <div class="meta-icon exp"><i class='bx bx-briefcase-alt-2'></i></div>
+                    <div class="meta-label">Experience</div>
+                    <div class="meta-value">{{ doctor.doctor_profile.years_experience }} yrs</div>
+                </div>
+                <div class="meta-stat">
+                    <div class="meta-icon patients"><i class='bx bx-group'></i></div>
+                    <div class="meta-label">Patients</div>
+                    <div class="meta-value">{{ doctor.patient_count }}+</div>
+                </div>
+                <div class="meta-stat">
+                    <div class="meta-icon fee"><i class='bx bx-wallet'></i></div>
+                    <div class="meta-label">Fee</div>
+                    <div class="meta-value green">৳{{ doctor.doctor_profile.consultation_fee|floatformat:0 }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Book button -->
+            <div class="card-footer">
+                <a href="{% url 'appointments:doctor_profile' doctor.id %}" class="book-btn">
+                    <i class='bx bx-calendar-plus'></i>
+                    View Profile & Book
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No doctors found</div>
+            <div class="empty-sub">Try a different name or specialty</div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!-- notifications/templates/notifications/center.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Notifications – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --amber:#F59E0B; --red:#EF4444; --purple:#7C3AED;
+            --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+        }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:800px; margin:0 auto; padding:32px 20px; }
+
+        .page-header {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-bottom:24px;
+        }
+
+        .page-title {
+            font-size:26px; font-weight:800;
+            display:flex; align-items:center; gap:10px;
+        }
+
+        .unread-badge {
+            background:var(--red); color:white;
+            font-size:13px; font-weight:800;
+            padding:5px 12px; border-radius:100px;
+        }
+
+        .mark-all-btn {
+            background:var(--blue); color:white;
+            border:none; border-radius:10px;
+            padding:10px 20px;
+            font-size:13px; font-weight:700;
+            cursor:pointer; font-family:'Inter',sans-serif;
+            display:flex; align-items:center; gap:6px;
+            transition:all 0.2s;
+        }
+        .mark-all-btn:hover { background:#1D4ED8; }
+        .mark-all-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+        /* Filter tabs */
+        .filter-tabs {
+            display:flex; gap:8px;
+            background:white; border:1px solid var(--border);
+            border-radius:12px; padding:6px;
+            margin-bottom:20px;
+        }
+
+        .filter-tab {
+            flex:1; text-align:center;
+            padding:10px 14px;
+            border-radius:8px;
+            font-size:13px; font-weight:600;
+            color:var(--slate); text-decoration:none;
+            transition:all 0.2s;
+        }
+        .filter-tab:hover  { background:var(--light); color:var(--dark); }
+        .filter-tab.active { background:var(--blue); color:white; }
+
+        /* Notification cards */
+        .notif-list {
+            background:white; border:1px solid var(--border);
+            border-radius:16px; overflow:hidden;
+        }
+
+        .notif-item {
+            display:flex; align-items:flex-start; gap:14px;
+            padding:18px 24px;
+            border-bottom:1px solid var(--border);
+            transition:background 0.2s;
+            position:relative;
+        }
+        .notif-item:last-child { border-bottom:none; }
+        .notif-item:hover { background:#FAFAFA; }
+
+        .notif-item.unread {
+            background:#EFF6FF;
+        }
+        .notif-item.unread:hover { background:#DBEAFE; }
+
+        .notif-item.unread::before {
+            content:'';
+            position:absolute;
+            left:6px; top:50%;
+            transform:translateY(-50%);
+            width:6px; height:6px;
+            background:var(--blue);
+            border-radius:50%;
+        }
+
+        .notif-icon {
+            width:44px; height:44px;
+            background:var(--light);
+            border:1px solid var(--border);
+            border-radius:12px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:22px;
+            flex-shrink:0;
+        }
+
+        .notif-icon.URGENT { background:#FEF2F2; border-color:#FECACA; }
+        .notif-icon.HIGH   { background:#FFFBEB; border-color:#FDE68A; }
+        .notif-icon.NORMAL { background:#EFF6FF; border-color:#BFDBFE; }
+
+        .notif-body { flex:1; min-width:0; }
+
+        .notif-title {
+            font-size:14px; font-weight:700; color:var(--dark);
+            margin-bottom:4px;
+        }
+
+        .notif-msg {
+            font-size:13px; color:var(--slate);
+            line-height:1.5;
+            margin-bottom:8px;
+        }
+
+        .notif-footer {
+            display:flex; align-items:center; gap:12px;
+            font-size:11px; color:#94A3B8;
+        }
+
+        .notif-action {
+            display:inline-flex; align-items:center; gap:4px;
+            background:var(--blue); color:white;
+            text-decoration:none;
+            padding:5px 14px; border-radius:7px;
+            font-size:12px; font-weight:700;
+            transition:all 0.2s;
+        }
+        .notif-action:hover { background:#1D4ED8; }
+
+        .notif-delete {
+            background:none; border:none;
+            color:#CBD5E1; font-size:18px;
+            cursor:pointer; padding:6px;
+            border-radius:6px;
+            transition:all 0.2s;
+            flex-shrink:0;
+        }
+        .notif-delete:hover { background:#FEF2F2; color:var(--red); }
+
+        /* Empty state */
+        .empty-state {
+            text-align:center; padding:80px 30px;
+            color:var(--slate);
+        }
+        .empty-icon { font-size:64px; margin-bottom:16px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .empty-sub { font-size:14px; }
+
+        @media(max-width:600px) {
+            .page-header { flex-direction:column; align-items:flex-start; gap:12px; }
+            .notif-item { padding:14px 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:home' %}" class="nav-back">
+        <i class='bx bx-arrow-back'></i> Dashboard
+    </a>
+</nav>
+
+<div class="content">
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1 class="page-title">
+            🔔 Notifications
+            {% if unread_count %}
+            <span class="unread-badge">{{ unread_count }} new</span>
+            {% endif %}
+        </h1>
+        {% if unread_count %}
+        <button class="mark-all-btn" onclick="markAllRead()" id="markAllBtn">
+            <i class='bx bx-check-double'></i>
+            Mark All Read
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+        <a href="?filter=all" class="filter-tab {% if filter == 'all' %}active{% endif %}">
+            All ({{ total_count }})
+        </a>
+        <a href="?filter=unread" class="filter-tab {% if filter == 'unread' %}active{% endif %}">
+            Unread ({{ unread_count }})
+        </a>
+        <a href="?filter=read" class="filter-tab {% if filter == 'read' %}active{% endif %}">
+            Read
+        </a>
+    </div>
+
+    <!-- List -->
+    <div class="notif-list">
+
+        {% for notif in notifications %}
+        <div class="notif-item {% if not notif.is_read %}unread{% endif %}" id="notif-{{ notif.id }}">
+            <div class="notif-icon {{ notif.priority }}">{{ notif.icon }}</div>
+            <div class="notif-body">
+                <div class="notif-title">{{ notif.title }}</div>
+                <div class="notif-msg">{{ notif.message }}</div>
+                <div class="notif-footer">
+                    <span><i class='bx bx-time-five'></i> {{ notif.created_at|timesince }} ago</span>
+                    {% if notif.action_url %}
+                    <a href="{% url 'notifications:open' notif.id %}" class="notif-action">
+                        <i class='bx bx-link-external'></i> {{ notif.action_label }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <button class="notif-delete" onclick="deleteNotif('{{ notif.id }}')" title="Delete">
+                <i class='bx bx-trash'></i>
+            </button>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">🔕</div>
+            <div class="empty-title">No notifications yet</div>
+            <div class="empty-sub">You'll see updates here when something happens</div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<script>
+function getCookie(name) {
+    var v = '; ' + document.cookie;
+    var p = v.split('; ' + name + '=');
+    if (p.length === 2) return p.pop().split(';').shift();
+    return '';
+}
+
+function markAllRead() {
+    var btn = document.getElementById('markAllBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Marking...';
+
+    fetch("{% url 'notifications:api_mark_all' %}", {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function deleteNotif(id) {
+    if (!confirm('Delete this notification?')) return;
+
+    fetch('/notifications/api/' + id + '/delete/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var el = document.getElementById('notif-' + id);
+            el.style.transition = 'all 0.3s';
+            el.style.opacity = '0';
+            el.style.transform = 'translateX(20px)';
+            setTimeout(function() { el.remove(); }, 300);
+        }
+    });
+}
+</script>
+
+</body>
+</html>

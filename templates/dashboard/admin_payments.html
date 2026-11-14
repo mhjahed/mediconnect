@@ -1,0 +1,235 @@
+<!-- templates/dashboard/admin_payments.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Payment Verification – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --red:#EF4444; --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:1100px; margin:0 auto; padding:32px 20px; }
+        .page-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .page-sub   { font-size:14px; color:var(--slate); margin-bottom:28px; }
+
+        .section-title { font-size:16px; font-weight:800; margin:24px 0 14px; display:flex; align-items:center; gap:8px; }
+
+        .payment-card {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; margin-bottom:12px; overflow:hidden;
+        }
+
+        .pc-top {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:16px 20px; gap:14px; flex-wrap:wrap;
+        }
+
+        .pc-left { display:flex; align-items:center; gap:14px; flex:1; min-width:0; }
+
+        .pc-avatar {
+            width:44px; height:44px; border-radius:50%;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            display:flex; align-items:center; justify-content:center;
+            font-size:15px; font-weight:800; color:white; flex-shrink:0;
+        }
+
+        .pc-name   { font-size:14px; font-weight:700; color:var(--dark); }
+        .pc-method { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .pc-amount { font-size:18px; font-weight:900; color:var(--green); }
+        .pc-date   { font-size:11px; color:var(--slate); text-align:right; }
+
+        .pc-actions { display:flex; gap:8px; align-items:center; }
+
+        .action-btn {
+            padding:8px 18px; border-radius:9px;
+            font-size:13px; font-weight:700; cursor:pointer;
+            font-family:'Inter',sans-serif; border:none;
+            display:inline-flex; align-items:center; gap:6px;
+        }
+        .btn-verify { background:var(--green); color:white; }
+        .btn-verify:hover { background:#059669; }
+        .btn-reject { background:#FEF2F2; color:var(--red); border:1px solid #FECACA; }
+        .btn-reject:hover { background:#FEE2E2; }
+
+        /* Details section */
+        .pc-details {
+            border-top:1px solid var(--border);
+            padding:12px 20px;
+            background:#FAFAFA;
+            display:none;
+        }
+
+        .pc-details.open { display:block; }
+
+        .detail-grid {
+            display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+            gap:12px;
+        }
+
+        .detail-item { }
+        .di-label { font-size:10px; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+        .di-value { font-size:13px; font-weight:700; color:var(--dark); margin-top:3px; font-family:'Courier New',monospace; }
+
+        .toggle-details {
+            background:none; border:none; font-size:12px; color:var(--blue);
+            font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;
+            display:flex; align-items:center; gap:4px;
+        }
+
+        /* Reject form */
+        .reject-form { display:none; padding:14px 20px; border-top:1px solid var(--border); background:#FFF5F5; }
+        .reject-form.open { display:block; }
+        .reject-input {
+            width:100%; padding:10px 14px; border:1px solid #FECACA;
+            border-radius:8px; font-size:13px; font-family:'Inter',sans-serif;
+            margin-bottom:10px; outline:none; background:white;
+        }
+        .reject-submit { padding:8px 18px; background:var(--red); color:white; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back"><i class='bx bx-arrow-back'></i> Admin Panel</a>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">💳 Payment Verification</h1>
+    <p class="page-sub">Review and verify patient payment submissions</p>
+
+    {% if messages %}
+    {% for msg in messages %}
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;font-weight:600;color:#065F46;">{{ msg }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Pending -->
+    <div class="section-title">
+        ⏳ Pending Verification ({{ pending|length }})
+    </div>
+
+    {% for payment in pending %}
+    <div class="payment-card">
+        <div class="pc-top">
+            <div class="pc-left">
+                <div class="pc-avatar">
+                    {{ payment.patient.first_name|slice:":1" }}{{ payment.patient.last_name|slice:":1" }}
+                </div>
+                <div>
+                    <div class="pc-name">{{ payment.patient.get_full_name }}</div>
+                    <div class="pc-method">
+                        {{ payment.get_method_icon }} {{ payment.get_payment_method_display }} ·
+                        Appointment with Dr. {{ payment.appointment.doctor.get_full_name }} ·
+                        {{ payment.appointment.appointment_date|date:"F d, Y" }}
+                    </div>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="pc-amount">৳{{ payment.amount }}</div>
+                <div class="pc-date">{{ payment.submitted_at|date:"M d, g:i A" }}</div>
+            </div>
+            <div class="pc-actions">
+                <button class="toggle-details" onclick="toggleDetails('{{ payment.id }}')">
+                    <i class='bx bx-info-circle'></i> Details
+                </button>
+                <form method="POST" action="{% url 'dashboard:verify_payment' payment.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="verify"/>
+                    <button type="submit" class="action-btn btn-verify">
+                        <i class='bx bx-check'></i> Verify
+                    </button>
+                </form>
+                <button class="action-btn btn-reject" onclick="toggleReject('{{ payment.id }}')">
+                    <i class='bx bx-x'></i> Reject
+                </button>
+            </div>
+        </div>
+
+        <!-- Payment details -->
+        <div class="pc-details" id="details-{{ payment.id }}">
+            <div class="detail-grid">
+                {% if payment.payment_method == 'BANK_TRANSFER' %}
+                <div class="detail-item"><div class="di-label">Bank Name</div><div class="di-value">{{ payment.bank_name|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Account Holder</div><div class="di-value">{{ payment.bank_account_holder|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Account No.</div><div class="di-value">{{ payment.bank_account_number|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Transaction ID</div><div class="di-value">{{ payment.bank_transaction_id|default:"—" }}</div></div>
+                {% elif payment.payment_method in 'BKASH,NAGAD,ROCKET,UPAY' %}
+                <div class="detail-item"><div class="di-label">Sender Number</div><div class="di-value">{{ payment.mobile_sender_number|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Transaction ID</div><div class="di-value">{{ payment.mobile_transaction_id|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Recipient No.</div><div class="di-value">{{ payment.mobile_number|default:"—" }}</div></div>
+                {% else %}
+                <div class="detail-item"><div class="di-label">Method</div><div class="di-value">{{ payment.other_method_name|default:"—" }}</div></div>
+                <div class="detail-item"><div class="di-label">Reference</div><div class="di-value">{{ payment.other_reference|default:"—" }}</div></div>
+                {% endif %}
+                {% if payment.payment_notes %}
+                <div class="detail-item" style="grid-column:1/-1;">
+                    <div class="di-label">Notes</div>
+                    <div class="di-value" style="font-family:'Inter',sans-serif;font-size:13px;">{{ payment.payment_notes }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Reject form -->
+        <div class="reject-form" id="reject-{{ payment.id }}">
+            <form method="POST" action="{% url 'dashboard:verify_payment' payment.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject"/>
+                <input type="text" name="rejection_reason" class="reject-input"
+                       placeholder="Reason for rejection (shown to patient)..."
+                       required/>
+                <button type="submit" class="reject-submit">Confirm Rejection</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div style="background:white;border:1px solid var(--border);border-radius:14px;padding:40px;text-align:center;color:var(--slate);">
+        ✅ No pending payments — all clear!
+    </div>
+    {% endfor %}
+
+    <!-- Verified -->
+    {% if verified %}
+    <div class="section-title">✅ Recently Verified</div>
+    {% for payment in verified %}
+    <div style="background:white;border:1px solid #D1FAE5;border-radius:12px;padding:14px 20px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-size:13px;">
+        <div>
+            <strong>{{ payment.patient.get_full_name }}</strong> ·
+            {{ payment.get_payment_method_display }} ·
+            Dr. {{ payment.appointment.doctor.get_full_name }}
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+            <span style="font-weight:800;color:var(--green);">৳{{ payment.amount }}</span>
+            <span style="color:var(--slate);">{{ payment.verified_at|date:"M d, g:i A" }}</span>
+            <span style="background:#ECFDF5;color:var(--green);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;">Verified</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+</div>
+
+<script>
+function toggleDetails(id) {
+    var el = document.getElementById('details-' + id);
+    el.classList.toggle('open');
+}
+
+function toggleReject(id) {
+    var el = document.getElementById('reject-' + id);
+    el.classList.toggle('open');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!-- templates/dashboard/admin_view_id_card.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>ID Card Generated – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#EFF6FF,#DBEAFE); min-height:100vh; padding:40px 20px; }
+
+        .container { max-width:700px; margin:0 auto; }
+
+        .success-banner {
+            background:linear-gradient(135deg,#065F46,#10B981);
+            color:white; border-radius:18px; padding:24px 32px;
+            text-align:center; margin-bottom:24px;
+            box-shadow:0 20px 50px rgba(16,185,129,0.25);
+        }
+        .success-banner h1 { font-size:24px; font-weight:900; margin-bottom:6px; }
+        .success-banner p  { font-size:14px; opacity:0.85; }
+
+        .card-display {
+            background:white; border-radius:18px; padding:32px;
+            box-shadow:0 20px 60px rgba(0,0,0,0.08);
+            margin-bottom:20px;
+        }
+
+        .section-label { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:var(--slate); margin-bottom:14px; }
+
+        .id-display {
+            background:linear-gradient(135deg,var(--dark),#0F172A);
+            border-radius:14px; padding:24px;
+            text-align:center; margin-bottom:24px;
+        }
+
+        .id-label { font-size:11px; color:rgba(255,255,255,0.5); text-transform:uppercase; letter-spacing:2px; }
+        .id-number { font-size:36px; font-weight:900; color:#60A5FA; font-family:'Courier New',monospace; letter-spacing:4px; margin:8px 0; }
+        .id-code { font-size:14px; color:rgba(255,255,255,0.6); font-family:'Courier New',monospace; letter-spacing:1px; }
+
+        .info-rows { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
+        .info-row { background:var(--light); border:1px solid var(--border); border-radius:10px; padding:12px 16px; }
+        .ir-label { font-size:10px; color:var(--slate); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+        .ir-value { font-size:14px; font-weight:700; color:var(--dark); margin-top:4px; }
+
+        .zones-list {
+            background:#EFF6FF; border:1px solid #BFDBFE;
+            border-radius:12px; padding:16px 20px; margin-bottom:24px;
+        }
+        .zones-list h4 { font-size:13px; font-weight:800; color:#1E3A8A; margin-bottom:10px; }
+
+        .zone-pill {
+            display:inline-block; background:white;
+            border:1px solid #BFDBFE; color:#1E40AF;
+            font-size:12px; font-weight:600;
+            padding:4px 10px; border-radius:100px;
+            margin:3px;
+        }
+
+        .actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:11px 22px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; transition:all 0.2s; }
+        .btn.primary { background:var(--blue); color:white; }
+        .btn.primary:hover { background:#1D4ED8; }
+        .btn.secondary { background:var(--light); border:1px solid var(--border); color:var(--slate); }
+        .btn.secondary:hover { border-color:var(--blue); color:var(--blue); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="success-banner">
+        <h1>✅ ID Card Generated Successfully!</h1>
+        <p>{{ card.user.get_full_name }} can now access {{ card.allowed_zones.count }} authorized rooms</p>
+    </div>
+
+    <div class="card-display">
+
+        <!-- ID Number -->
+        <div class="id-display">
+            <div class="id-label">Staff ID Number</div>
+            <div class="id-number">{{ card.staff_id_number }}</div>
+            <div class="id-code">Access Code: {{ card.access_code }}</div>
+        </div>
+
+        <!-- Info -->
+        <div class="section-label">📋 Card Details</div>
+        <div class="info-rows">
+            <div class="info-row">
+                <div class="ir-label">Full Name</div>
+                <div class="ir-value">{{ card.user.get_full_name }}</div>
+            </div>
+            <div class="info-row">
+                <div class="ir-label">Designation</div>
+                <div class="ir-value">{{ card.designation }}</div>
+            </div>
+            <div class="info-row">
+                <div class="ir-label">Department</div>
+                <div class="ir-value">{{ card.department|default:"—" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="ir-label">Desk Location</div>
+                <div class="ir-value">{{ card.desk_number|default:"—" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="ir-label">Blood Group</div>
+                <div class="ir-value">{{ card.blood_group|default:"—" }}</div>
+            </div>
+            <div class="info-row">
+                <div class="ir-label">Valid Till</div>
+                <div class="ir-value">{{ card.valid_till|date:"M d, Y" }}</div>
+            </div>
+        </div>
+
+        <!-- Allowed zones -->
+        <div class="section-label">🔐 Authorized Access Zones</div>
+        <div class="zones-list">
+            <h4>{{ card.allowed_zones.count }} room(s) accessible with this card:</h4>
+            {% for zone in card.allowed_zones.all %}
+            <span class="zone-pill">{{ zone.get_icon }} {{ zone.name }}</span>
+            {% empty %}
+            <p style="font-size:13px; color:var(--slate);">No zones assigned yet.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <a href="{% url 'dashboard:edit_id_card' card.id %}" class="btn primary">
+                <i class='bx bx-edit'></i> Edit Access
+            </a>
+            <a href="{% url 'dashboard:admin_id_cards' %}" class="btn secondary">
+                <i class='bx bx-list-ul'></i> All ID Cards
+            </a>
+            <a href="{% url 'dashboard:admin_home' %}" class="btn secondary">
+                <i class='bx bx-arrow-back'></i> Admin Panel
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

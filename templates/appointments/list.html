@@ -1,0 +1,196 @@
+<!-- templates/appointments/list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Appointments – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --amber:#F59E0B; --red:#EF4444; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-actions { display:flex; gap:10px; }
+        .nav-btn { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; transition:all 0.2s; }
+        .nav-btn:hover { color:var(--blue); border-color:var(--blue); }
+        .nav-btn.primary { background:var(--blue); color:white; border-color:var(--blue); }
+        .nav-btn.primary:hover { background:#1D4ED8; }
+
+        .content { max-width:900px; margin:0 auto; padding:32px 20px; }
+        .page-title { font-size:26px; font-weight:800; margin-bottom:4px; }
+        .page-sub   { font-size:14px; color:var(--slate); margin-bottom:28px; }
+
+        .section-label { font-size:14px; font-weight:800; margin:24px 0 14px; display:flex; align-items:center; gap:8px; }
+
+        .appt-card {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; padding:18px 22px;
+            margin-bottom:12px; display:flex;
+            align-items:center; gap:16px; transition:all 0.2s;
+        }
+        .appt-card:hover { box-shadow:0 6px 20px rgba(0,0,0,0.06); }
+
+        .appt-avatar {
+            width:48px; height:48px; border-radius:50%;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            display:flex; align-items:center; justify-content:center;
+            font-size:16px; font-weight:800; color:white; flex-shrink:0;
+        }
+        .appt-avatar.patient-av { background:linear-gradient(135deg,var(--green),#059669); }
+
+        .appt-info { flex:1; min-width:0; }
+        .appt-name { font-size:15px; font-weight:700; color:var(--dark); }
+        .appt-meta { font-size:12px; color:var(--slate); margin-top:3px; display:flex; gap:12px; flex-wrap:wrap; }
+        .appt-meta span { display:flex; align-items:center; gap:3px; }
+
+        .appt-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+
+        .status-pill { padding:5px 12px; border-radius:100px; font-size:11px; font-weight:700; }
+        .status-pill.confirmed { background:#ECFDF5; color:var(--green); }
+        .status-pill.pending   { background:#FFFBEB; color:var(--amber); }
+        .status-pill.meet_set  { background:#EFF6FF; color:var(--blue); }
+        .status-pill.completed { background:#F0FDF4; color:var(--green); }
+        .status-pill.cancelled { background:#FEF2F2; color:var(--red); }
+
+        .action-link {
+            display:inline-flex; align-items:center; gap:5px;
+            padding:7px 14px; border-radius:8px;
+            font-size:12px; font-weight:700; text-decoration:none;
+            transition:all 0.2s;
+        }
+        .action-link.join { background:var(--blue); color:white; }
+        .action-link.join:hover { background:#1D4ED8; }
+        .action-link.meet { background:var(--amber); color:white; }
+        .action-link.pay  { background:var(--red); color:white; }
+        .action-link.record { background:var(--green); color:white; }
+        .action-link.view { background:var(--light); border:1px solid var(--border); color:var(--slate); }
+
+        .empty-state {
+            background:white; border:1px solid var(--border);
+            border-radius:16px; padding:60px 20px;
+            text-align:center;
+        }
+        .empty-icon { font-size:56px; margin-bottom:16px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .empty-sub { font-size:14px; color:var(--slate); margin-bottom:24px; }
+        .empty-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            background:var(--blue); color:white;
+            padding:12px 28px; border-radius:12px;
+            font-size:14px; font-weight:700; text-decoration:none;
+        }
+        .empty-btn:hover { background:#1D4ED8; }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <div class="nav-actions">
+        <a href="{% url 'dashboard:home' %}" class="nav-btn"><i class='bx bxs-dashboard'></i> Dashboard</a>
+        <a href="{% url 'appointments:search' %}" class="nav-btn primary"><i class='bx bx-search-alt'></i> Find Doctor</a>
+    </div>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">📅 My Appointments</h1>
+    <p class="page-sub">All your consultation bookings</p>
+
+    {% if upcoming %}
+    <div class="section-label">📅 Upcoming ({{ upcoming|length }})</div>
+    {% for appt in upcoming %}
+    <div class="appt-card">
+        {% if user.role == 'DOCTOR' %}
+        <div class="appt-avatar patient-av">
+            {{ appt.patient.first_name|slice:":1" }}{{ appt.patient.last_name|slice:":1" }}
+        </div>
+        <div class="appt-info">
+            <div class="appt-name">{{ appt.patient.get_full_name }}</div>
+        {% else %}
+        <div class="appt-avatar">
+            {{ appt.doctor.first_name|slice:":1" }}{{ appt.doctor.last_name|slice:":1" }}
+        </div>
+        <div class="appt-info">
+            <div class="appt-name">Dr. {{ appt.doctor.get_full_name }}</div>
+        {% endif %}
+            <div class="appt-meta">
+                <span><i class='bx bx-calendar'></i> {{ appt.appointment_date|date:"M d, Y" }}</span>
+                <span><i class='bx bx-time'></i> {{ appt.start_time|time:"g:i A" }}</span>
+                <span>৳{{ appt.amount }}</span>
+            </div>
+        </div>
+        <div class="appt-right">
+            <span class="status-pill {{ appt.status|lower }}">{{ appt.get_status_display }}</span>
+
+            {% if appt.payment_status == 'UNPAID' %}
+            <a href="{% url 'payments:checkout' appt.id %}" class="action-link pay">
+                <i class='bx bx-credit-card'></i> Pay
+            </a>
+            {% elif appt.meet_link %}
+            <a href="{{ appt.meet_link }}" target="_blank" class="action-link join">
+                <i class='bx bx-video'></i> Join
+            </a>
+            {% elif user.role == 'DOCTOR' and appt.payment_status == 'PAID' and not appt.meet_link %}
+            <a href="{% url 'appointments:setup_meet' appt.id %}" class="action-link meet">
+                <i class='bx bx-link'></i> Set Meet
+            </a>
+            {% endif %}
+
+            {% if user.role == 'DOCTOR' and appt.payment_status == 'PAID' %}
+            <a href="{% url 'appointments:write_record' appt.id %}" class="action-link record">
+                <i class='bx bx-edit'></i> Notes
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if past %}
+    <div class="section-label">📋 Past ({{ past|length }})</div>
+    {% for appt in past %}
+    <div class="appt-card" style="opacity:0.7;">
+        {% if user.role == 'DOCTOR' %}
+        <div class="appt-avatar patient-av">
+            {{ appt.patient.first_name|slice:":1" }}{{ appt.patient.last_name|slice:":1" }}
+        </div>
+        <div class="appt-info">
+            <div class="appt-name">{{ appt.patient.get_full_name }}</div>
+        {% else %}
+        <div class="appt-avatar">
+            {{ appt.doctor.first_name|slice:":1" }}{{ appt.doctor.last_name|slice:":1" }}
+        </div>
+        <div class="appt-info">
+            <div class="appt-name">Dr. {{ appt.doctor.get_full_name }}</div>
+        {% endif %}
+            <div class="appt-meta">
+                <span><i class='bx bx-calendar'></i> {{ appt.appointment_date|date:"M d, Y" }}</span>
+                <span><i class='bx bx-time'></i> {{ appt.start_time|time:"g:i A" }}</span>
+            </div>
+        </div>
+        <div class="appt-right">
+            <span class="status-pill {{ appt.status|lower }}">{{ appt.get_status_display }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if not upcoming and not past %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No appointments yet</div>
+        <div class="empty-sub">Search for a doctor and book your first consultation</div>
+        <a href="{% url 'appointments:search' %}" class="empty-btn">
+            <i class='bx bx-search-alt'></i> Find a Doctor
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+</body>
+</html>

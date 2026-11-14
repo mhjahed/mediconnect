@@ -1,0 +1,171 @@
+<!-- templates/dashboard/admin_staff.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Manage Staff – MediConnect Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --amber:#F59E0B; --red:#EF4444; --purple:#7C3AED; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:1200px; margin:0 auto; padding:32px 20px; }
+
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:14px; }
+        .page-title { font-size:26px; font-weight:800; margin-bottom:4px; }
+        .page-sub { font-size:14px; color:var(--slate); }
+
+        .add-btn { display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,var(--purple),#5B21B6); color:white; text-decoration:none; padding:11px 22px; border-radius:10px; font-size:13px; font-weight:700; box-shadow:0 4px 16px rgba(124,58,237,0.3); }
+        .add-btn:hover { transform:translateY(-1px); }
+
+        .search-bar { background:white; border:1px solid var(--border); border-radius:14px; padding:6px; display:flex; align-items:center; gap:10px; margin-bottom:24px; }
+        .search-bar i { font-size:18px; color:#94A3B8; margin-left:14px; }
+        .search-input { flex:1; border:none; outline:none; padding:10px 6px; font-size:14px; font-family:'Inter',sans-serif; }
+
+        /* Department sections */
+        .dept-section { background:white; border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:20px; }
+
+        .dept-header {
+            padding:16px 22px; border-bottom:1px solid var(--border);
+            background:linear-gradient(90deg,#F5F3FF,white);
+            display:flex; align-items:center; gap:10px;
+        }
+        .dept-icon { font-size:24px; }
+        .dept-name { font-size:15px; font-weight:800; color:var(--dark); flex:1; }
+        .dept-count { background:var(--light); color:var(--slate); font-size:12px; font-weight:700; padding:4px 12px; border-radius:100px; }
+
+        .staff-row {
+            display:grid; grid-template-columns:auto 1fr auto auto auto auto;
+            gap:14px; align-items:center;
+            padding:14px 22px;
+            border-bottom:1px solid #F8FAFC;
+            transition:background 0.2s;
+        }
+        .staff-row:last-child { border-bottom:none; }
+        .staff-row:hover { background:#FAFAFA; }
+
+        .staff-avatar { width:42px; height:42px; border-radius:50%; background:linear-gradient(135deg,var(--purple),#5B21B6); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:white; flex-shrink:0; }
+        .staff-avatar.nurse { background:linear-gradient(135deg,var(--green),#059669); }
+
+        .staff-info { min-width:0; }
+        .staff-name { font-size:14px; font-weight:700; color:var(--dark); }
+        .staff-meta { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .role-pill { padding:4px 10px; border-radius:100px; font-size:11px; font-weight:700; }
+        .role-NURSE { background:#ECFDF5; color:var(--green); }
+        .role-STAFF { background:#F5F3FF; color:var(--purple); }
+
+        .designation-pill { font-size:12px; font-weight:600; color:var(--slate); }
+
+        .attendance-dot { display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:700; padding:4px 10px; border-radius:100px; }
+        .attendance-dot.present { background:#ECFDF5; color:var(--green); }
+        .attendance-dot.absent { background:#F1F5F9; color:var(--slate); }
+
+        .action-btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; background:var(--blue); color:white; }
+        .action-btn:hover { background:#1D4ED8; }
+
+        .empty-state { padding:60px 30px; text-align:center; color:var(--slate); background:white; border:1px solid var(--border); border-radius:16px; }
+        .empty-icon { font-size:54px; margin-bottom:14px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+
+        @media(max-width:768px) {
+            .staff-row { grid-template-columns:auto 1fr auto; }
+            .designation-pill, .attendance-dot, .role-pill { display:none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back"><i class='bx bx-arrow-back'></i> Admin Panel</a>
+</nav>
+
+<div class="content">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">🛡️ Manage Staff</h1>
+            <p class="page-sub">{{ total_staff }} staff member{{ total_staff|pluralize }} across all departments</p>
+        </div>
+        <a href="{% url 'dashboard:admin_staff_keys' %}" class="add-btn">
+            <i class='bx bx-key'></i> Generate Staff Key
+        </a>
+    </div>
+
+    <div class="search-bar">
+        <i class='bx bx-search'></i>
+        <input type="text" class="search-input" placeholder="Search by name, email, or designation..." id="searchInput" onkeyup="filterStaff()"/>
+    </div>
+
+    {% if messages %}{% for msg in messages %}
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;font-weight:600;">{{ msg }}</div>
+    {% endfor %}{% endif %}
+
+    {% if by_department %}
+        {% for dept_name, staff_list in by_department.items %}
+        <div class="dept-section">
+            <div class="dept-header">
+                <div class="dept-icon">{{ dept_name|slice:":2" }}</div>
+                <div class="dept-name">{{ dept_name|slice:"2:" }}</div>
+                <span class="dept-count">{{ staff_list|length }} member{{ staff_list|length|pluralize }}</span>
+            </div>
+            {% for staff in staff_list %}
+            <div class="staff-row" data-search="{{ staff.first_name|lower }} {{ staff.last_name|lower }} {{ staff.email|lower }} {{ staff.staff_profile.get_designation_display|lower }}">
+                <div class="staff-avatar {% if staff.role == 'NURSE' %}nurse{% endif %}">
+                    {{ staff.first_name|slice:":1" }}{{ staff.last_name|slice:":1" }}
+                </div>
+                <div class="staff-info">
+                    <div class="staff-name">{{ staff.get_full_name }}</div>
+                    <div class="staff-meta">📧 {{ staff.email }} · 📞 {{ staff.phone_number|default:"No phone" }}</div>
+                </div>
+                <span class="role-pill role-{{ staff.role }}">{{ staff.get_role_display }}</span>
+                <span class="designation-pill">{{ staff.staff_profile.get_designation_display }}</span>
+                {% if staff.attended_today %}
+                <span class="attendance-dot present">🟢 Present</span>
+                {% else %}
+                <span class="attendance-dot absent">⚪ Absent</span>
+                {% endif %}
+                {% if staff.id_card %}
+                <a href="{% url 'dashboard:view_id_card' staff.id_card.id %}" class="action-btn">
+                    <i class='bx bx-id-card'></i> ID Card
+                </a>
+                {% else %}
+                <a href="{% url 'dashboard:generate_id_card' staff.id %}" class="action-btn">
+                    <i class='bx bx-plus'></i> Gen ID
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">🛡️</div>
+            <div class="empty-title">No staff registered yet</div>
+            <p>Generate access keys to allow staff registration.</p>
+            <br/>
+            <a href="{% url 'dashboard:admin_staff_keys' %}" class="add-btn">
+                <i class='bx bx-key'></i> Generate First Key
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function filterStaff() {
+    var query = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.staff-row').forEach(function(row) {
+        row.style.display = row.dataset.search.indexOf(query) >= 0 ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>

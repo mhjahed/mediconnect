@@ -1,0 +1,116 @@
+<!-- templates/404.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>404 - Page Not Found | MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',sans-serif;
+            min-height:100vh;
+            background:linear-gradient(135deg,#1E3A8A,#2563EB,#0EA5E9);
+            display:flex; align-items:center; justify-content:center;
+            padding:20px; color:white;
+            position:relative; overflow:hidden;
+        }
+        body::before {
+            content:''; position:absolute;
+            top:-100px; right:-100px;
+            width:400px; height:400px;
+            background:rgba(255,255,255,0.05); border-radius:50%;
+        }
+        body::after {
+            content:''; position:absolute;
+            bottom:-80px; left:-80px;
+            width:300px; height:300px;
+            background:rgba(255,255,255,0.04); border-radius:50%;
+        }
+
+        .err-card { text-align:center; max-width:540px; position:relative; z-index:1; }
+
+        .err-icon {
+            font-size:120px; margin-bottom:20px;
+            animation:bounce 2s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%,100% { transform:translateY(0); }
+            50%     { transform:translateY(-12px); }
+        }
+
+        .err-code {
+            font-size:clamp(80px, 18vw, 160px);
+            font-weight:900; letter-spacing:-6px;
+            line-height:1; margin-bottom:8px;
+            background:linear-gradient(180deg, white 0%, rgba(255,255,255,0.3) 100%);
+            -webkit-background-clip:text;
+            background-clip:text;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .err-title {
+            font-size:28px; font-weight:800;
+            margin-bottom:12px;
+        }
+
+        .err-msg {
+            font-size:15px; color:rgba(255,255,255,0.7);
+            line-height:1.6; margin-bottom:32px;
+        }
+
+        .err-actions { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+        .err-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            padding:13px 28px; border-radius:12px;
+            font-size:14px; font-weight:700;
+            text-decoration:none; transition:all 0.3s;
+        }
+        .btn-primary {
+            background:white; color:#2563EB;
+            box-shadow:0 8px 24px rgba(0,0,0,0.2);
+        }
+        .btn-primary:hover { transform:translateY(-2px); }
+        .btn-ghost {
+            background:rgba(255,255,255,0.1);
+            color:white;
+            border:1px solid rgba(255,255,255,0.25);
+        }
+        .btn-ghost:hover { background:rgba(255,255,255,0.2); }
+
+        .err-brand {
+            position:absolute; bottom:24px; left:50%;
+            transform:translateX(-50%);
+            font-size:13px; font-weight:700;
+            color:rgba(255,255,255,0.4);
+        }
+        .err-brand span { color:rgba(255,255,255,0.8); }
+    </style>
+</head>
+<body>
+
+<div class="err-card">
+    <div class="err-icon">🩺</div>
+    <div class="err-code">404</div>
+    <div class="err-title">Page Not Found</div>
+    <div class="err-msg">
+        The page you're looking for seems to have taken a sick day.
+        Don't worry — let's get you back to recovery.
+    </div>
+    <div class="err-actions">
+        <a href="/" class="err-btn btn-primary">
+            <i class='bx bx-home'></i> Go Home
+        </a>
+        <a href="javascript:history.back()" class="err-btn btn-ghost">
+            <i class='bx bx-arrow-back'></i> Go Back
+        </a>
+    </div>
+</div>
+
+<div class="err-brand">Powered by Medi<span>Connect</span></div>
+
+</body>
+</html>

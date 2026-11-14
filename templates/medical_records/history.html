@@ -1,0 +1,284 @@
+<!-- templates/medical_records/history.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>My Medical Records – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --red:#EF4444; --amber:#F59E0B; --light:#F8FAFC;
+            --slate:#64748B; --border:#E2E8F0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+        }
+
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+
+        .nav-actions { display:flex; align-items:center; gap:10px; }
+        .nav-link {
+            display:flex; align-items:center; gap:6px;
+            font-size:13px; font-weight:600; color:var(--slate);
+            text-decoration:none; padding:8px 14px;
+            border:1px solid var(--border); border-radius:8px;
+            transition:all 0.2s;
+        }
+        .nav-link:hover { color:var(--blue); border-color:var(--blue); }
+
+        .content { max-width:1000px; margin:0 auto; padding:32px 20px; }
+
+        .page-title { font-size:26px; font-weight:800; margin-bottom:4px; letter-spacing:-0.5px; }
+        .page-sub   { font-size:14px; color:var(--slate); margin-bottom:28px; }
+
+        /* Record card */
+        .record-card {
+            background:white;
+            border:1px solid var(--border);
+            border-radius:16px;
+            overflow:hidden;
+            margin-bottom:16px;
+            transition:all 0.3s;
+        }
+
+        .record-card:hover {
+            transform:translateY(-2px);
+            box-shadow:0 10px 32px rgba(37,99,235,0.08);
+            border-color:rgba(37,99,235,0.2);
+        }
+
+        .record-top {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:20px 24px;
+            gap:16px;
+        }
+
+        .record-left { display:flex; align-items:center; gap:16px; flex:1; min-width:0; }
+
+        .doc-avatar {
+            width:52px; height:52px;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:18px; font-weight:900; color:white;
+            flex-shrink:0;
+        }
+
+        .record-info { flex:1; min-width:0; }
+        .record-doctor { font-size:16px; font-weight:800; color:var(--dark); margin-bottom:4px; }
+        .record-meta   { font-size:12px; color:var(--slate); display:flex; gap:14px; flex-wrap:wrap; }
+        .record-meta span { display:flex; align-items:center; gap:4px; }
+
+        .record-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+        .finalized-badge {
+            padding:5px 12px; border-radius:100px;
+            font-size:11px; font-weight:700;
+            background:#ECFDF5; color:var(--green);
+            display:inline-flex; align-items:center; gap:4px;
+        }
+
+        .draft-badge {
+            padding:5px 12px; border-radius:100px;
+            font-size:11px; font-weight:700;
+            background:#FFFBEB; color:var(--amber);
+        }
+
+        .view-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            background:var(--blue); color:white; text-decoration:none;
+            padding:9px 18px; border-radius:9px;
+            font-size:13px; font-weight:700;
+            transition:all 0.2s;
+        }
+
+        .view-btn:hover { background:#1D4ED8; transform:translateY(-1px); }
+
+        /* Quick preview strip */
+        .record-preview {
+            border-top:1px solid var(--border);
+            padding:12px 24px;
+            background:#FAFAFA;
+            display:flex; gap:24px; flex-wrap:wrap;
+        }
+
+        .preview-item {
+            font-size:12px; color:var(--slate);
+            display:flex; align-items:center; gap:5px;
+        }
+
+        .preview-item strong { color:var(--dark); }
+
+        /* Locked card */
+        .locked-card {
+            background:white;
+            border:2px dashed #FECACA;
+            border-radius:16px;
+            padding:20px 24px;
+            margin-bottom:12px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:16px;
+            flex-wrap:wrap;
+        }
+
+        .locked-left { display:flex; align-items:center; gap:14px; }
+        .lock-icon { font-size:32px; }
+        .locked-title { font-size:14px; font-weight:700; color:#991B1B; margin-bottom:2px; }
+        .locked-sub   { font-size:12px; color:#7F1D1D; }
+
+        .pay-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            background:linear-gradient(135deg,var(--red),#DC2626);
+            color:white; text-decoration:none;
+            padding:10px 20px; border-radius:9px;
+            font-size:13px; font-weight:700;
+            white-space:nowrap;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align:center; padding:60px 20px;
+            color:var(--slate);
+        }
+
+        .empty-icon { font-size:64px; margin-bottom:16px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+        .empty-sub   { font-size:14px; margin-bottom:24px; }
+
+        .book-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            background:var(--blue); color:white; text-decoration:none;
+            padding:12px 28px; border-radius:12px; font-size:14px; font-weight:700;
+        }
+
+        /* Section title */
+        .section-title {
+            font-size:14px; font-weight:800; color:var(--dark);
+            margin-bottom:16px; padding-bottom:10px;
+            border-bottom:2px solid var(--border);
+            display:flex; align-items:center; gap:8px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <div class="nav-actions">
+        <a href="/appointments/search/" class="nav-link"><i class='bx bx-search-alt'></i> Find Doctor</a>
+        <a href="/dashboard/" class="nav-link"><i class='bx bxs-dashboard'></i> Dashboard</a>
+    </div>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">📋 My Medical Records</h1>
+    <p class="page-sub">Your complete consultation history and prescriptions</p>
+
+    <!-- Locked records (unpaid) -->
+    {% if locked_appointments %}
+    <div class="section-title">
+        🔒 Pending Payment — Records Locked
+    </div>
+    {% for appt in locked_appointments %}
+    <div class="locked-card">
+        <div class="locked-left">
+            <div class="lock-icon">🔒</div>
+            <div>
+                <div class="locked-title">Record locked — payment required</div>
+                <div class="locked-sub">
+                    Dr. {{ appt.doctor.get_full_name }} ·
+                    {{ appt.appointment_date|date:"F d, Y" }} ·
+                    ৳{{ appt.amount }}
+                </div>
+            </div>
+        </div>
+        <a href="/payments/checkout/{{ appt.id }}/" class="pay-btn">
+            💳 Pay Now
+        </a>
+    </div>
+    {% endfor %}
+    <br/>
+    {% endif %}
+
+    <!-- Accessible records -->
+    <div class="section-title">
+        📂 Your Medical Records ({{ records|length }})
+    </div>
+
+    {% for record in records %}
+    <div class="record-card">
+        <div class="record-top">
+            <div class="record-left">
+                <div class="doc-avatar">
+                    {{ record.doctor.first_name|slice:":1" }}{{ record.doctor.last_name|slice:":1" }}
+                </div>
+                <div class="record-info">
+                    <div class="record-doctor">Dr. {{ record.doctor.get_full_name }}</div>
+                    <div class="record-meta">
+                        <span><i class='bx bx-calendar'></i> {{ record.created_at|date:"F d, Y" }}</span>
+                        <span><i class='bx bx-time'></i> {{ record.appointment.start_time|time:"g:i A" }}</span>
+                        {% if record.doctor.doctor_profile %}
+                        <span><i class='bx bx-plus-medical'></i> {{ record.doctor.doctor_profile.get_specialty_display }}</span>
+                        {% endif %}
+                        <span><i class='bx bx-capsule'></i> {{ record.prescriptions.count }} medication(s)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="record-actions">
+                {% if record.is_finalized %}
+                <span class="finalized-badge">✅ Finalized</span>
+                {% else %}
+                <span class="draft-badge">📝 Draft</span>
+                {% endif %}
+                <a href="{% url 'medical_records:record_detail' record.id %}" class="view-btn">
+                    <i class='bx bx-file-medical'></i> View
+                </a>
+                <a href="{% url 'medical_records:print' record.id %}"
+                   target="_blank"
+                   style="display:inline-flex;align-items:center;gap:5px;background:#F8FAFC;border:1px solid var(--border);color:var(--slate);padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;">
+                    <i class='bx bx-printer'></i> Print
+                </a>
+            </div>
+        </div>
+
+        {% if record.diagnosis %}
+        <div class="record-preview">
+            <div class="preview-item">
+                <i class='bx bx-stethoscope'></i>
+                <span><strong>Diagnosis:</strong> {{ record.diagnosis|truncatechars:80 }}</span>
+            </div>
+            {% if record.prescriptions.first %}
+            <div class="preview-item">
+                <i class='bx bx-capsule'></i>
+                <span><strong>Rx:</strong> {{ record.prescriptions.first.drug_name }} {{ record.prescriptions.first.dosage }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div class="empty-title">No medical records yet</div>
+        <div class="empty-sub">Your consultation records will appear here after your doctor completes the visit notes.</div>
+        <a href="/appointments/search/" class="book-btn">
+            <i class='bx bx-calendar-plus'></i> Book a Consultation
+        </a>
+    </div>
+    {% endfor %}
+
+</div>
+</body>
+</html>

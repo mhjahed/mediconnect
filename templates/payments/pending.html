@@ -1,0 +1,172 @@
+<!-- templates/payments/pending.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Payment Submitted – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#FFFBEB,#FEF3C7,#FFFBEB); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:32px 16px; }
+
+        .card { background:white; border-radius:24px; max-width:520px; width:100%; box-shadow:0 32px 80px rgba(245,158,11,0.15); overflow:hidden; text-align:center; }
+
+        .hero { background:linear-gradient(135deg,#92400E,#D97706,#F59E0B); padding:48px 36px 40px; }
+
+        .clock-icon { width:88px; height:88px; background:rgba(255,255,255,0.15); border:3px solid rgba(255,255,255,0.3); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:40px; margin:0 auto 20px; animation:pulse 2s ease-in-out infinite; }
+
+        @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.05);} }
+
+        .hero h2 { font-size:26px; font-weight:900; color:white; margin-bottom:6px; }
+        .hero p  { font-size:14px; color:rgba(255,255,255,0.75); }
+
+        .body { padding:32px 36px; }
+
+        .ref-box { background:#FFFBEB; border:1px dashed #FCD34D; border-radius:12px; padding:14px 20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
+        .ref-label { font-size:12px; color:#92400E; font-weight:600; }
+        .ref-value { font-family:'Courier New',monospace; font-size:14px; font-weight:700; color:var(--amber); }
+
+        /* Payment summary */
+        .payment-summary { background:var(--light); border:1px solid var(--border); border-radius:14px; padding:0; margin-bottom:24px; overflow:hidden; text-align:left; }
+
+        .ps-header { background:linear-gradient(90deg,var(--dark),#334155); padding:12px 18px; display:flex; align-items:center; gap:8px; }
+        .ps-header span { font-size:13px; font-weight:700; color:white; }
+
+        .ps-row { display:flex; justify-content:space-between; padding:10px 18px; border-bottom:1px solid var(--border); font-size:13px; }
+        .ps-row:last-child { border-bottom:none; }
+        .ps-row:nth-child(even) { background:white; }
+        .ps-label { color:var(--slate); }
+        .ps-value { font-weight:700; color:var(--dark); font-family:'Courier New',monospace; font-size:12px; }
+        .ps-value.method { font-family:'Inter',sans-serif; font-size:13px; }
+
+        .steps { list-style:none; text-align:left; margin-bottom:24px; }
+        .step  { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+        .step:last-child { border-bottom:none; }
+
+        .step-num { width:28px; height:28px; background:linear-gradient(135deg,var(--amber),#D97706); color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; flex-shrink:0; margin-top:1px; }
+        .step-text { font-size:13px; color:var(--slate); line-height:1.5; }
+        .step-text strong { color:var(--dark); }
+
+        .action-btns { display:flex; flex-direction:column; gap:10px; }
+        .btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:13px; border-radius:12px; font-size:14px; font-weight:700; text-decoration:none; transition:all 0.2s; }
+        .btn.primary { background:linear-gradient(135deg,var(--blue),#1D4ED8); color:white; }
+        .btn.secondary { background:var(--light); border:1px solid var(--border); color:var(--slate); }
+        .btn.secondary:hover { border-color:var(--blue); color:var(--blue); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="hero">
+        <div class="clock-icon">⏳</div>
+        <h2>Payment Submitted!</h2>
+        <p>Awaiting verification by our admin team</p>
+    </div>
+
+    <div class="body">
+        <div class="ref-box">
+            <span class="ref-label">🎫 Payment Reference</span>
+            <span class="ref-value">#{{ payment.id|stringformat:"s"|slice:":8"|upper }}</span>
+        </div>
+
+        <!-- What was submitted -->
+        <div class="payment-summary">
+            <div class="ps-header">
+                <i class='bx bx-receipt' style="color:#94A3B8; font-size:16px;"></i>
+                <span>Payment Information Submitted</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Method</span>
+                <span class="ps-value method">{{ payment.get_method_icon }} {{ payment.get_payment_method_display }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Amount</span>
+                <span class="ps-value method" style="color:var(--green);">৳{{ payment.amount }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Transaction Ref</span>
+                <span class="ps-value">{{ payment.get_reference_display }}</span>
+            </div>
+
+            {% if payment.payment_method == 'BANK_TRANSFER' %}
+            <div class="ps-row">
+                <span class="ps-label">Bank Name</span>
+                <span class="ps-value method">{{ payment.bank_name }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Account Holder</span>
+                <span class="ps-value method">{{ payment.bank_account_holder }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Account No.</span>
+                <span class="ps-value">{{ payment.bank_account_number }}</span>
+            </div>
+            {% elif payment.payment_method in 'BKASH,NAGAD,ROCKET,UPAY' %}
+            <div class="ps-row">
+                <span class="ps-label">Sender Number</span>
+                <span class="ps-value">{{ payment.mobile_sender_number }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Transaction ID</span>
+                <span class="ps-value">{{ payment.mobile_transaction_id }}</span>
+            </div>
+            {% elif payment.payment_method == 'OTHER' %}
+            <div class="ps-row">
+                <span class="ps-label">Method Used</span>
+                <span class="ps-value method">{{ payment.other_method_name }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Reference</span>
+                <span class="ps-value">{{ payment.other_reference|default:"—" }}</span>
+            </div>
+            {% endif %}
+
+            <div class="ps-row">
+                <span class="ps-label">Submitted At</span>
+                <span class="ps-value method">{{ payment.submitted_at|date:"F d, Y g:i A" }}</span>
+            </div>
+            <div class="ps-row">
+                <span class="ps-label">Status</span>
+                <span class="ps-value method" style="color:var(--amber);">⏳ Pending Verification</span>
+            </div>
+        </div>
+
+        <!-- Next steps -->
+        <ul class="steps">
+            <li class="step">
+                <div class="step-num">1</div>
+                <div class="step-text"><strong>Admin Review:</strong> Our team will verify your payment details within 1–6 hours.</div>
+            </li>
+            <li class="step">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong>Email Confirmation:</strong> You'll receive a confirmation email once verified.</div>
+            </li>
+            <li class="step">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong>Doctor Sets Meet Link:</strong> Your doctor will then set up the Google Meet session.</div>
+            </li>
+            <li class="step">
+                <div class="step-num">4</div>
+                <div class="step-text"><strong>Reminder:</strong> You'll get an automatic email reminder 10 minutes before your session.</div>
+            </li>
+        </ul>
+
+        <div class="action-btns">
+            <a href="/dashboard/" class="btn primary">
+                <i class='bx bxs-dashboard'></i>
+                Go to Dashboard
+            </a>
+            <a href="/appointments/" class="btn secondary">
+                <i class='bx bx-calendar'></i>
+                View My Appointments
+            </a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

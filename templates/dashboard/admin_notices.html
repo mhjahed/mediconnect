@@ -1,0 +1,119 @@
+<!-- templates/dashboard/admin_notices.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Notices – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --amber:#F59E0B; --red:#EF4444; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:900px; margin:0 auto; padding:32px 20px; }
+
+        .page-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .page-sub { font-size:14px; color:var(--slate); margin-bottom:28px; }
+
+        .post-card { background:white; border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:24px; }
+        .post-hdr { background:linear-gradient(135deg,var(--dark),#334155); padding:20px 24px; }
+        .post-hdr h2 { font-size:16px; font-weight:800; color:white; }
+        .post-hdr p { font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px; }
+        .post-body { padding:24px; }
+
+        .form-group { margin-bottom:16px; }
+        .form-label { display:block; font-size:12px; font-weight:700; color:var(--slate); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:7px; }
+        .form-input { width:100%; padding:12px 14px; border:2px solid var(--border); border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; outline:none; }
+        .form-input:focus { border-color:var(--blue); }
+        textarea.form-input { resize:vertical; min-height:100px; }
+
+        .post-btn { background:linear-gradient(135deg,var(--blue),#1D4ED8); color:white; border:none; border-radius:10px; padding:12px 24px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; display:inline-flex; align-items:center; gap:6px; }
+
+        .notice-card { background:white; border:1px solid var(--border); border-radius:14px; padding:18px 22px; margin-bottom:12px; }
+        .notice-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+        .priority-tag { padding:3px 10px; border-radius:100px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:1px; }
+        .priority-CRITICAL { background:#FEE2E2; color:#991B1B; }
+        .priority-URGENT { background:#FEF2F2; color:var(--red); }
+        .priority-HIGH { background:#FFFBEB; color:var(--amber); }
+        .priority-NORMAL { background:#EFF6FF; color:var(--blue); }
+        .priority-LOW { background:#F1F5F9; color:var(--slate); }
+
+        .notice-title { font-size:15px; font-weight:800; color:var(--dark); margin-bottom:6px; }
+        .notice-content { font-size:13px; color:var(--slate); line-height:1.6; }
+        .notice-meta { font-size:11px; color:#94A3B8; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back"><i class='bx bx-arrow-back'></i> Admin Panel</a>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">📢 Admin Notices</h1>
+    <p class="page-sub">Post announcements that appear on all doctor dashboards</p>
+
+    {% if messages %}{% for msg in messages %}
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;font-weight:600;">{{ msg }}</div>
+    {% endfor %}{% endif %}
+
+    <div class="post-card">
+        <div class="post-hdr">
+            <h2>✍️ Post New Notice</h2>
+            <p>All doctors will receive an in-app notification</p>
+        </div>
+        <div class="post-body">
+            <form method="POST" action="{% url 'dashboard:post_notice' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input" placeholder="e.g. System Maintenance Tonight" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea name="content" class="form-input" placeholder="Detailed message..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-input">
+                        <option value="LOW">Low</option>
+                        <option value="NORMAL" selected>Normal</option>
+                        <option value="HIGH">High</option>
+                        <option value="CRITICAL">Critical</option>
+                    </select>
+                </div>
+                <button type="submit" class="post-btn">
+                    <i class='bx bx-send'></i> Post Notice
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <h2 style="font-size:16px; font-weight:800; margin:24px 0 14px;">Posted Notices</h2>
+
+    {% for notice in notices %}
+    <div class="notice-card">
+        <div class="notice-top">
+            <div class="notice-title">{{ notice.title }}</div>
+            <span class="priority-tag priority-{{ notice.priority }}">{{ notice.priority }}</span>
+        </div>
+        <div class="notice-content">{{ notice.content }}</div>
+        <div class="notice-meta">
+            Posted by {{ notice.posted_by.get_full_name }} · {{ notice.created_at|timesince }} ago
+            {% if not notice.is_active %} · <span style="color:var(--red);">DEACTIVATED</span>{% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <p style="color:var(--slate); text-align:center; padding:20px;">No notices yet.</p>
+    {% endfor %}
+</div>
+</body>
+</html>

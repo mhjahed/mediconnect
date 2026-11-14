@@ -1,0 +1,1002 @@
+<!-- access_control/templates/access_control/scanner.html -->
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MediConnect | Access Scanner</title>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <script src="{% static 'js/vendor/zxing.min.js' %}"></script>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --red:#EF4444; --amber:#F59E0B; --white:#FFFFFF;
+            --slate:#64748B; --border:rgba(255,255,255,0.08);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',sans-serif;
+            background:linear-gradient(135deg,#0F172A 0%,#1E293B 60%,#0C4A6E 100%);
+            min-height:100vh; padding:20px;
+        }
+        .page-wrap { max-width:1100px; margin:0 auto; }
+
+        .page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+        .brand { display:flex; align-items:center; gap:12px; }
+        .brand-icon {
+            width:48px; height:48px;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            border-radius:14px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:22px;
+            box-shadow:0 8px 24px rgba(37,99,235,0.4);
+        }
+        .brand-text h1 { font-size:20px; font-weight:800; color:var(--white); }
+        .brand-text p  { font-size:12px; color:rgba(255,255,255,0.4); margin-top:2px; }
+
+        .back-btn {
+            display:flex; align-items:center; gap:6px;
+            color:rgba(255,255,255,0.5); font-size:13px; font-weight:600;
+            text-decoration:none;
+            background:rgba(255,255,255,0.05);
+            border:1px solid rgba(255,255,255,0.08);
+            border-radius:10px; padding:8px 16px;
+        }
+        .back-btn:hover { color:var(--white); }
+
+        .lib-status {
+            padding:10px 16px; border-radius:10px;
+            font-size:13px; font-weight:600; margin-bottom:20px;
+            display:flex; align-items:center; gap:8px;
+        }
+        .lib-status.ok      { background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.25); color:#6EE7B7; }
+        .lib-status.error   { background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25); color:#FCA5A5; }
+        .lib-status.loading { background:rgba(37,99,235,0.12); border:1px solid rgba(37,99,235,0.25); color:#93C5FD; }
+
+        .main-grid { display:grid; grid-template-columns:280px 1fr; gap:20px; align-items:start; }
+
+        .card {
+            background:rgba(255,255,255,0.04);
+            backdrop-filter:blur(16px);
+            border:1px solid var(--border);
+            border-radius:20px; overflow:hidden;
+        }
+
+        .card-header {
+            padding:16px 20px;
+            border-bottom:1px solid var(--border);
+            display:flex; align-items:center; gap:10px;
+        }
+        .card-header i    { font-size:18px; color:var(--blue); }
+        .card-header h3   { font-size:14px; font-weight:700; color:var(--white); flex:1; }
+        .card-header span { font-size:11px; color:rgba(255,255,255,0.35); }
+        .card-body { padding:16px; }
+
+        .room-list { max-height:600px; overflow-y:auto; padding-right:4px; }
+        .room-list::-webkit-scrollbar { width:3px; }
+        .room-list::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+
+        .floor-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:rgba(255,255,255,0.25); padding:10px 8px 6px; }
+
+        .room-item {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; border-radius:10px;
+            cursor:pointer; transition:all 0.2s;
+            border:2px solid transparent; margin-bottom:4px;
+        }
+        .room-item:hover  { background:rgba(255,255,255,0.04); border-color:rgba(37,99,235,0.2); }
+        .room-item.active { background:rgba(37,99,235,0.15); border-color:var(--blue); }
+
+        .room-icon-wrap {
+            width:36px; height:36px; background:rgba(255,255,255,0.06);
+            border-radius:10px; display:flex; align-items:center; justify-content:center;
+            font-size:18px; flex-shrink:0;
+        }
+
+        .room-info { flex:1; min-width:0; }
+        .room-name  { font-size:13px; font-weight:600; color:rgba(255,255,255,0.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .room-floor { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; }
+
+        .right-panel { display:flex; flex-direction:column; gap:16px; }
+
+        .video-area {
+            position:relative; background:#000;
+            border-radius:12px; overflow:hidden;
+            aspect-ratio:16/10;
+            border:2px solid rgba(255,255,255,0.06);
+        }
+        #scanVideo { width:100%; height:100%; object-fit:cover; display:block; }
+
+        .scan-overlay { position:absolute; inset:0; display:none; pointer-events:none; }
+        .scan-overlay.active { display:block; }
+
+        .scan-line-h {
+            position:absolute; left:5%; right:5%;
+            height:2px;
+            background:linear-gradient(90deg,transparent,var(--blue),var(--blue),transparent);
+            box-shadow:0 0 16px var(--blue);
+            animation:scanV 2.5s ease-in-out infinite;
+            top:5%;
+        }
+        @keyframes scanV { 0%{top:5%;} 50%{top:88%;} 100%{top:5%;} }
+
+        .corner-mark { position:absolute; width:28px; height:28px; border-color:rgba(37,99,235,0.9); border-style:solid; }
+        .cm-tl { top:10px; left:10px;  border-width:3px 0 0 3px; }
+        .cm-tr { top:10px; right:10px; border-width:3px 3px 0 0; }
+        .cm-bl { bottom:10px; left:10px;  border-width:0 0 3px 3px; }
+        .cm-br { bottom:10px; right:10px; border-width:0 3px 3px 0; }
+
+        .formats-overlay {
+            position:absolute; bottom:10px; left:0; right:0;
+            text-align:center; font-size:10px;
+            color:rgba(255,255,255,0.4); letter-spacing:0.5px;
+        }
+
+        .camera-row { display:flex; gap:8px; margin-bottom:12px; }
+        .cam-select {
+            flex:1; background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px; padding:10px 12px;
+            color:rgba(255,255,255,0.8);
+            font-size:13px; font-family:'Inter',sans-serif;
+            outline:none; cursor:pointer;
+        }
+        .cam-select option { background:#1E293B; }
+
+        .ctrl-row { display:flex; gap:8px; margin-bottom:12px; margin-top:12px; }
+
+        .ctrl-btn {
+            flex:1; padding:12px; border-radius:10px;
+            border:none; font-size:13px; font-weight:700;
+            font-family:'Inter',sans-serif; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:6px;
+            transition:all 0.2s;
+        }
+        .ctrl-btn.primary {
+            background:linear-gradient(135deg,var(--blue),#1D4ED8); color:white;
+            box-shadow:0 4px 16px rgba(37,99,235,0.35);
+        }
+        .ctrl-btn.danger {
+            background:rgba(239,68,68,0.15); color:#FCA5A5;
+            border:1px solid rgba(239,68,68,0.25);
+        }
+        .ctrl-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+        .status-bar {
+            padding:12px 16px; border-radius:10px;
+            font-size:13px; font-weight:500; margin-bottom:12px;
+            display:flex; align-items:center; gap:8px;
+            min-height:46px;
+        }
+        .status-bar.idle     { background:rgba(100,116,139,0.12); color:rgba(255,255,255,0.45); }
+        .status-bar.scanning { background:rgba(37,99,235,0.12); color:#93C5FD; }
+        .status-bar.success  { background:rgba(16,185,129,0.12); color:#6EE7B7; }
+        .status-bar.denied   { background:rgba(239,68,68,0.12); color:#FCA5A5; animation:shake 0.4s; }
+        .status-bar.captured { background:rgba(245,158,11,0.12); color:#FCD34D; }
+        .status-bar.warning  { background:rgba(124,58,237,0.12); color:#C4B5FD; }
+
+        @keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);} 40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
+
+        .spinner {
+            width:16px; height:16px;
+            border:2px solid rgba(255,255,255,0.2);
+            border-top-color:currentColor;
+            border-radius:50%; animation:spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        .result-container {
+            border-radius:14px; overflow:hidden;
+            display:none; animation:slideUp 0.35s ease;
+        }
+        .result-container.visible { display:block; }
+        @keyframes slideUp { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
+
+        .rc-header { padding:16px 18px; display:flex; align-items:center; justify-content:space-between; }
+        .rc-header.granted  { background:rgba(16,185,129,0.15); }
+        .rc-header.denied   { background:rgba(239,68,68,0.15); }
+        .rc-header.captured { background:rgba(245,158,11,0.15); }
+
+        .rc-header-left { display:flex; align-items:center; gap:10px; }
+        .rc-dot { width:10px; height:10px; border-radius:50%; }
+        .rc-dot.granted  { background:var(--green); box-shadow:0 0 10px rgba(16,185,129,0.6); }
+        .rc-dot.denied   { background:var(--red); box-shadow:0 0 10px rgba(239,68,68,0.6); }
+        .rc-dot.captured { background:var(--amber); box-shadow:0 0 10px rgba(245,158,11,0.6); }
+
+        .rc-title { font-size:15px; font-weight:800; color:var(--white); }
+        .rc-time  { font-size:11px; color:rgba(255,255,255,0.35); font-family:monospace; }
+
+        .rc-body { background:rgba(0,0,0,0.25); }
+
+        .data-row {
+            display:flex; justify-content:space-between;
+            padding:10px 18px;
+            border-bottom:1px solid rgba(255,255,255,0.04);
+            font-size:12px; gap:12px;
+        }
+        .data-row:last-child { border-bottom:none; }
+        .data-row:nth-child(even) { background:rgba(255,255,255,0.02); }
+
+        .dr-key { color:rgba(255,255,255,0.35); font-weight:600; width:110px; }
+        .dr-val { color:var(--white); font-weight:600; text-align:right; flex:1; word-break:break-all; }
+        .dr-val.mono { font-family:'Courier New',monospace; font-size:11px; color:#A5B4FC; }
+
+        .user-block {
+            display:flex; align-items:center; gap:12px;
+            padding:14px 18px; background:rgba(255,255,255,0.03);
+            border-top:1px solid rgba(255,255,255,0.05);
+        }
+        .user-avatar {
+            width:42px; height:42px; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:15px; font-weight:900; color:white;
+            border:2px solid rgba(255,255,255,0.15);
+        }
+        .ua-green { background:linear-gradient(135deg,var(--green),#059669); }
+        .ub-name { font-size:14px; font-weight:800; color:var(--white); }
+        .ub-role { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; }
+
+        .manual-hint { font-size:12px; color:rgba(255,255,255,0.35); margin-bottom:10px; }
+        .manual-input-row { display:flex; gap:8px; }
+
+        .manual-input {
+            flex:1; background:rgba(255,255,255,0.06);
+            border:1px solid rgba(255,255,255,0.1);
+            border-radius:10px; padding:12px 14px;
+            color:var(--white); font-size:14px;
+            font-family:'Inter',sans-serif; outline:none;
+        }
+        .manual-input::placeholder { color:rgba(255,255,255,0.25); }
+        .manual-input:focus { border-color:var(--blue); }
+
+        .manual-btn {
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; border:none;
+            border-radius:10px; padding:12px 20px;
+            font-size:13px; font-weight:700;
+            font-family:'Inter',sans-serif; cursor:pointer;
+        }
+
+        .flash-overlay {
+            position:fixed; inset:0;
+            pointer-events:none; z-index:9999;
+            opacity:0; transition:opacity 0.05s;
+        }
+
+        @media(max-width:768px) {
+            .main-grid { grid-template-columns:1fr; }
+            .room-list { max-height:200px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="page-wrap">
+
+    <div class="page-header">
+        <div class="brand">
+            <div class="brand-icon">🏥</div>
+            <div class="brand-text">
+                <h1>Access Scanner</h1>
+                <p>MediConnect — Hospital Room Control</p>
+            </div>
+        </div>
+        <a href="/dashboard/" class="back-btn">
+            <i class='bx bx-arrow-back'></i> Dashboard
+        </a>
+    </div>
+
+    <div class="lib-status loading" id="libStatus">
+        <span class="spinner"></span>
+        <span id="libStatusText">Checking barcode scanner library...</span>
+    </div>
+
+    <div class="main-grid">
+
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-door-open'></i>
+                <h3>Select Room</h3>
+                <span id="selectedRoomLabel">None</span>
+            </div>
+            <div class="card-body">
+                <div class="room-list">
+                    {% if floors %}
+                        {% for floor, zone_list in floors.items %}
+                        <div class="floor-label">
+                            {% if floor == 0 %}Basement
+                            {% elif floor == 1 %}Ground Floor
+                            {% else %}Floor {{ floor }}{% endif %}
+                        </div>
+                        {% for zone in zone_list %}
+                        <div class="room-item"
+                             data-room="{{ zone.name }}"
+                             data-code="{{ zone.access_code_text }}"
+                             onclick="selectRoom(this)">
+                            <div class="room-icon-wrap">{{ zone.get_icon }}</div>
+                            <div class="room-info">
+                                <div class="room-name">{{ zone.name }}</div>
+                                <div class="room-floor">{{ zone.get_zone_type_display }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                    <div style="padding:24px;text-align:center;color:rgba(255,255,255,0.3);font-size:13px;">
+                        No rooms configured.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+
+            <div class="card">
+                <div class="card-header">
+                    <i class='bx bx-scan'></i>
+                    <h3>Barcode / QR Scanner</h3>
+                    <span id="formatLabel">All formats</span>
+                </div>
+                <div class="card-body">
+
+                    <div class="camera-row">
+                        <select class="cam-select" id="camSelect">
+                            <option value="">Detecting cameras...</option>
+                        </select>
+                    </div>
+
+                    <div class="video-area">
+                        <video id="scanVideo" autoplay playsinline muted></video>
+                        <div class="scan-overlay" id="scanOverlay">
+                            <div class="scan-line-h"></div>
+                            <div class="corner-mark cm-tl"></div>
+                            <div class="corner-mark cm-tr"></div>
+                            <div class="corner-mark cm-bl"></div>
+                            <div class="corner-mark cm-br"></div>
+                            <div class="formats-overlay">
+                                QR · Code128 · EAN · UPC · DataMatrix · PDF417 · Aztec
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ctrl-row">
+                        <button class="ctrl-btn primary" id="btnStart" onclick="startScanner()">
+                            <i class='bx bx-camera'></i> Start Scanner
+                        </button>
+                        <button class="ctrl-btn danger" id="btnStop" onclick="stopScanner()" disabled>
+                            <i class='bx bx-stop'></i> Stop
+                        </button>
+                    </div>
+
+                    <div class="status-bar idle" id="statusBar">
+                        <i class='bx bx-info-circle'></i>
+                        <span id="statusTxt">Press "Start Scanner" to activate camera</span>
+                    </div>
+
+                    <div class="result-container" id="resultContainer">
+                        <div class="rc-header" id="rcHeader">
+                            <div class="rc-header-left">
+                                <div class="rc-dot" id="rcDot"></div>
+                                <div class="rc-title" id="rcTitle">Result</div>
+                            </div>
+                            <div class="rc-time" id="rcTime"></div>
+                        </div>
+                        <div class="rc-body" id="rcBody"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class='bx bx-keyboard'></i>
+                    <h3>Manual Entry</h3>
+                </div>
+                <div class="card-body">
+                    <p class="manual-hint">
+                        Type, paste, or use a USB barcode scanner.
+                    </p>
+                    <div class="manual-input-row">
+                        <input type="text" class="manual-input" id="manualInput"
+                               placeholder="Paste barcode text..." autocomplete="off"/>
+                        <button class="manual-btn" onclick="submitManual()">
+                            <i class='bx bx-check'></i> Verify
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+var codeReader   = null;
+var isCooldown   = false;
+var isActive     = false;
+var selectedRoom = '';
+var currentStream = null;
+var COOLDOWN_MS  = 2500;
+
+var scanVideo, scanOverlay, statusBar, statusTxt, resultContainer;
+var rcHeader, rcDot, rcTitle, rcTime, rcBody;
+var btnStart, btnStop, camSelect, libStatus, libStatusText;
+
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Scanner initializing...');
+
+    scanVideo       = document.getElementById('scanVideo');
+    scanOverlay     = document.getElementById('scanOverlay');
+    statusBar       = document.getElementById('statusBar');
+    statusTxt       = document.getElementById('statusTxt');
+    resultContainer = document.getElementById('resultContainer');
+    rcHeader        = document.getElementById('rcHeader');
+    rcDot           = document.getElementById('rcDot');
+    rcTitle         = document.getElementById('rcTitle');
+    rcTime          = document.getElementById('rcTime');
+    rcBody          = document.getElementById('rcBody');
+    btnStart        = document.getElementById('btnStart');
+    btnStop         = document.getElementById('btnStop');
+    camSelect       = document.getElementById('camSelect');
+    libStatus       = document.getElementById('libStatus');
+    libStatusText   = document.getElementById('libStatusText');
+
+    document.getElementById('manualInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') submitManual();
+    });
+
+    // Check ZXing loaded
+    if (typeof ZXing === 'undefined') {
+        console.error('❌ ZXing library not loaded!');
+        libStatus.className = 'lib-status error';
+        libStatusText.textContent = '❌ Scanner library not loaded. Check /static/js/vendor/zxing.min.js';
+        btnStart.disabled = true;
+        return;
+    }
+
+    console.log('✅ ZXing library loaded:', typeof ZXing);
+
+    libStatus.className = 'lib-status ok';
+    libStatusText.textContent = '✅ Ready — supports QR, Code128, Code39, EAN, UPC, DataMatrix, PDF417';
+
+    // ═══════════════════════════════════════════════════════
+    // SETUP ZXING HINTS
+    // ═══════════════════════════════════════════════════════
+    var hints = new Map();
+
+    try {
+        hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+            ZXing.BarcodeFormat.CODE_128,    // Priority 1 (staff barcodes)
+            ZXing.BarcodeFormat.QR_CODE,     // Priority 2
+            ZXing.BarcodeFormat.CODE_39,
+            ZXing.BarcodeFormat.EAN_13,
+            ZXing.BarcodeFormat.EAN_8,
+            ZXing.BarcodeFormat.UPC_A,
+            ZXing.BarcodeFormat.UPC_E,
+            ZXing.BarcodeFormat.DATA_MATRIX,
+            ZXing.BarcodeFormat.PDF_417,
+            ZXing.BarcodeFormat.AZTEC,
+            ZXing.BarcodeFormat.ITF,
+        ]);
+        console.log('✅ Barcode formats configured');
+    } catch(e) {
+        console.warn('⚠️ Format setup error:', e);
+    }
+
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+    // ═══════════════════════════════════════════════════════
+    // ⭐ CRITICAL FIX: CREATE THE READER OBJECT
+    // ═══════════════════════════════════════════════════════
+    try {
+        codeReader = new ZXing.BrowserMultiFormatReader(hints, 200);
+        console.log('✅ codeReader created successfully');
+    } catch(e) {
+        console.warn('Trying fallback constructor:', e);
+        try {
+            codeReader = new ZXing.BrowserMultiFormatReader(hints);
+            console.log('✅ codeReader created (fallback)');
+        } catch(e2) {
+            console.error('❌ Could not create codeReader:', e2);
+            libStatus.className = 'lib-status error';
+            libStatusText.textContent = '❌ Could not initialize scanner: ' + e2.message;
+            btnStart.disabled = true;
+            return;
+        }
+    }
+
+    // Now load cameras
+    loadCameras();
+});
+
+
+// ═══════════════════════════════════════════════════════════
+// LOAD CAMERAS
+// ═══════════════════════════════════════════════════════════
+function loadCameras() {
+    console.log('📷 Loading cameras...');
+
+    if (!navigator.mediaDevices) {
+        camSelect.innerHTML = '<option value="">Camera not supported</option>';
+        setStatus('warning', '⚠ Browser does not support camera');
+        return;
+    }
+
+    // Request permission first to get device labels
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+            console.log('✅ Camera permission granted');
+            // Stop immediately - just needed permission
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            return navigator.mediaDevices.enumerateDevices();
+        })
+        .then(function(devices) {
+            var videoDevices = devices.filter(function(d) { return d.kind === 'videoinput'; });
+            console.log('📹 Found ' + videoDevices.length + ' camera(s)');
+
+            camSelect.innerHTML = '';
+            if (videoDevices.length === 0) {
+                camSelect.innerHTML = '<option value="">No cameras found</option>';
+                setStatus('warning', '⚠ No camera found — use manual entry');
+                return;
+            }
+
+            videoDevices.forEach(function(device, i) {
+                var opt = document.createElement('option');
+                opt.value = device.deviceId;
+                var label = device.label || ('Camera ' + (i + 1));
+                opt.textContent = label;
+                var lbl = label.toLowerCase();
+                if (lbl.indexOf('back') >= 0 || lbl.indexOf('rear') >= 0 || lbl.indexOf('environment') >= 0) {
+                    opt.selected = true;
+                }
+                camSelect.appendChild(opt);
+            });
+
+            setStatus('idle', videoDevices.length + ' camera(s) found. Press "Start Scanner".');
+        })
+        .catch(function(err) {
+            console.error('❌ Camera error:', err);
+            camSelect.innerHTML = '<option value="">Default camera</option>';
+
+            if (err.name === 'NotAllowedError') {
+                setStatus('denied', '❌ Camera permission denied. Click address bar lock icon to allow.');
+            } else {
+                setStatus('idle', 'Press "Start Scanner" to begin (will request permission).');
+            }
+        });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// START SCANNER
+// ═══════════════════════════════════════════════════════════
+function startScanner() {
+    console.log('▶️ startScanner() called');
+    console.log('   codeReader:', codeReader);
+    console.log('   isActive:', isActive);
+
+    if (!codeReader) {
+        console.error('❌ codeReader is null! Cannot start.');
+        setStatus('denied', '❌ Scanner not initialized. Refresh the page.');
+        return;
+    }
+
+    if (isActive) {
+        console.log('Already scanning');
+        return;
+    }
+
+    btnStart.disabled = true;
+    btnStop.disabled  = false;
+    setStatus('scanning', '⏳ Starting camera...');
+
+    var deviceId = camSelect.value || undefined;
+    console.log('🎥 Starting scanner with device:', deviceId || 'default');
+
+    // ★ Use ZXing's built-in method
+    codeReader.decodeFromVideoDevice(
+        deviceId,
+        'scanVideo',
+        function callbackFn(result, error) {
+            if (result && !isCooldown) {
+                var rawText = result.getText();
+                var format  = result.getBarcodeFormat();
+                var fmtName = getFormatName(format);
+
+                console.log('✅ DETECTED: ' + fmtName + ' → ' + rawText);
+                document.getElementById('formatLabel').textContent = fmtName;
+                onDetected(rawText, fmtName);
+            }
+        }
+    )
+    .then(function(controls) {
+        console.log('✅ Scanner started successfully');
+        isActive = true;
+        scanOverlay.classList.add('active');
+        setStatus('scanning', '🔍 Scanning... Point at any barcode or QR code');
+        window._scannerControls = controls;
+    })
+    .catch(function(err) {
+        console.error('❌ Scanner start error:', err);
+        btnStart.disabled = false;
+        btnStop.disabled  = true;
+        isActive = false;
+
+        var errorMsg = '❌ ';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            errorMsg += 'Camera permission denied. Allow camera in browser and refresh.';
+        } else if (err.name === 'NotFoundError') {
+            errorMsg += 'No camera found on this device.';
+        } else if (err.name === 'NotReadableError') {
+            errorMsg += 'Camera is being used by another app.';
+        } else if (err.name === 'OverconstrainedError') {
+            errorMsg += 'Camera constraints failed.';
+        } else {
+            errorMsg += (err.message || err.name || 'Unknown error');
+        }
+
+        setStatus('denied', errorMsg);
+    });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// STOP SCANNER
+// ═══════════════════════════════════════════════════════════
+function stopScanner() {
+    console.log('⏹️ Stopping scanner');
+
+    if (window._scannerControls && typeof window._scannerControls.stop === 'function') {
+        try { window._scannerControls.stop(); } catch(e) {}
+        window._scannerControls = null;
+    }
+
+    if (codeReader) {
+        try { codeReader.reset(); } catch(e) {}
+    }
+
+    if (scanVideo.srcObject) {
+        scanVideo.srcObject.getTracks().forEach(function(track) {
+            track.stop();
+        });
+        scanVideo.srcObject = null;
+    }
+
+    isActive = false;
+    scanOverlay.classList.remove('active');
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+    setStatus('idle', '⏸ Scanner stopped. Press "Start Scanner" to resume.');
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// BARCODE DETECTED
+// ═══════════════════════════════════════════════════════════
+function onDetected(text, fmt) {
+    if (isCooldown) return;
+    isCooldown = true;
+    setTimeout(function() { isCooldown = false; }, COOLDOWN_MS);
+
+    playSound('scanned');
+    flashScreen('amber');
+    setStatus('captured', '📦 ' + fmt + ' detected — processing...');
+    sendToServer(text, fmt);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// SEND TO SERVER
+// ═══════════════════════════════════════════════════════════
+function sendToServer(text, format) {
+    console.log('📤 Sending to server:', text);
+
+    fetch('/access/api/scan/', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify({
+            scanned_text:   text,
+            barcode_format: format || 'unknown',
+            selected_room:  selectedRoom,
+        })
+    })
+    .then(function(r) {
+        console.log('📥 Response status:', r.status);
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+    })
+    .then(function(data) {
+        console.log('📦 Data:', data);
+        renderResult(data);
+    })
+    .catch(function(err) {
+        console.error('❌ Server error:', err);
+        playSound('error');
+        setStatus('denied', '❌ Server error: ' + err.message);
+    });
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// RENDER RESULT
+// ═══════════════════════════════════════════════════════════
+function renderResult(data) {
+    var now = new Date().toLocaleTimeString();
+    playSound(data.sound || 'scanned');
+
+    resultContainer.classList.add('visible');
+    rcTime.textContent = now;
+
+    var html = '';
+
+    if (data.status === 'granted') {
+        flashScreen('green');
+        setStatus('success', '✅ ' + data.message);
+        rcHeader.className = 'rc-header granted';
+        rcDot.className    = 'rc-dot granted';
+        rcTitle.textContent = '✅ ACCESS GRANTED';
+
+        if (data.zone) {
+            html += dataRow('Zone',  data.zone.icon + ' ' + data.zone.name);
+            html += dataRow('Type',  data.zone.type);
+            html += dataRow('Floor', 'Floor ' + data.zone.floor);
+            if (data.zone.room) html += dataRow('Room', data.zone.room);
+        }
+        html += dataRow('Barcode', data.scanned_data, 'mono');
+        html += dataRow('Format',  data.barcode_format || 'N/A');
+        html += dataRow('Time',    now);
+
+        if (data.user) {
+            html += '<div class="user-block">' +
+                '<div class="user-avatar ua-green">' + (data.user.initials || '??') + '</div>' +
+                '<div class="user-block-info">' +
+                    '<div class="ub-name">' + data.user.name + '</div>' +
+                    '<div class="ub-role">' + data.user.role + '</div>' +
+                '</div></div>';
+        }
+
+    } else if (data.status === 'denied') {
+        flashScreen('red');
+        setStatus('denied', '❌ ' + data.reason);
+        rcHeader.className = 'rc-header denied';
+        rcDot.className    = 'rc-dot denied';
+        rcTitle.textContent = '❌ ACCESS DENIED';
+
+        html += dataRow('Reason',  data.reason, 'red');
+        html += dataRow('Barcode', data.scanned_data, 'mono');
+        html += dataRow('Time',    now);
+
+    } else if (data.status === 'unknown') {
+        flashScreen('amber');
+        setStatus('captured', '📊 ' + (data.message || 'Data captured'));
+        rcHeader.className = 'rc-header captured';
+        rcDot.className    = 'rc-dot captured';
+        rcTitle.textContent = '📊 DATA CAPTURED';
+
+        if (data.data_display) {
+            var entries = Object.entries(data.data_display);
+            for (var i = 0; i < entries.length; i++) {
+                var k = entries[i][0];
+                var v = entries[i][1];
+                var isMono = k.toLowerCase().indexOf('text') >= 0 || k.toLowerCase().indexOf('raw') >= 0;
+                html += dataRow(k, v, isMono ? 'mono' : '');
+            }
+        } else {
+            html += dataRow('Barcode', data.scanned_data, 'mono');
+            html += dataRow('Format',  data.barcode_format || 'N/A');
+            html += dataRow('Status',  'Not registered as access code');
+        }
+
+    } else {
+        setStatus('warning', '⚠ ' + (data.message || 'Unknown response'));
+        html += dataRow('Status', data.status || 'unknown');
+        html += dataRow('Message', data.message || 'No details');
+    }
+
+    rcBody.innerHTML = html;
+
+    setTimeout(function() {
+        resultContainer.classList.remove('visible');
+        if (isActive) {
+            setStatus('scanning', '🔍 Ready for next scan...');
+        } else {
+            setStatus('idle', 'Press "Start Scanner"');
+        }
+    }, 12000);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MANUAL SUBMIT
+// ═══════════════════════════════════════════════════════════
+function submitManual() {
+    var input = document.getElementById('manualInput');
+    var text = (input.value || '').trim();
+    if (!text) { input.focus(); return; }
+    setStatus('captured', '⚡ Processing manual entry...');
+    sendToServer(text, 'MANUAL_ENTRY');
+    input.value = '';
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// ROOM SELECTION
+// ═══════════════════════════════════════════════════════════
+function selectRoom(el) {
+    document.querySelectorAll('.room-item').forEach(function(r) {
+        r.classList.remove('active');
+    });
+    el.classList.add('active');
+    selectedRoom = el.dataset.room;
+    document.getElementById('selectedRoomLabel').textContent = selectedRoom;
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// BARCODE FORMAT NAME
+// ═══════════════════════════════════════════════════════════
+function getFormatName(f) {
+    var names = {
+        0:  'AZTEC',
+        1:  'CODABAR',
+        2:  'CODE_39',
+        3:  'CODE_93',
+        4:  'CODE_128',
+        5:  'DATA_MATRIX',
+        6:  'EAN_8',
+        7:  'EAN_13',
+        8:  'ITF',
+        9:  'MAXICODE',
+        10: 'PDF_417',
+        11: 'QR_CODE',
+        12: 'RSS_14',
+        13: 'RSS_EXPANDED',
+        14: 'UPC_A',
+        15: 'UPC_E',
+    };
+    return names[f] || ('FORMAT_' + f);
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// SOUND PLAYBACK
+// ═══════════════════════════════════════════════════════════
+function playSound(type) {
+    var sounds = {
+        'granted': '/static/sounds/granted.mp3',
+        'denied':  '/static/sounds/denied.mp3',
+        'scanned': '/static/sounds/scanned.mp3',
+        'error':   '/static/sounds/error.mp3',
+    };
+
+    var src = sounds[type];
+    if (src) {
+        var audio = new Audio(src);
+        audio.volume = 0.8;
+        audio.play().catch(function() {
+            playGenerated(type);
+        });
+    } else {
+        playGenerated(type);
+    }
+}
+
+
+function playGenerated(type) {
+    try {
+        var ac = new (window.AudioContext || window.webkitAudioContext)();
+
+        if (type === 'granted') {
+            [523.25, 659.25, 783.99].forEach(function(freq, i) {
+                var o = ac.createOscillator();
+                var g = ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.frequency.value = freq;
+                o.type = 'sine';
+                var t = ac.currentTime + i * 0.12;
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.35, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+                o.start(t); o.stop(t + 0.4);
+            });
+
+        } else if (type === 'denied') {
+            [0, 0.2].forEach(function(d) {
+                var o = ac.createOscillator();
+                var g = ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.frequency.value = 180;
+                o.type = 'square';
+                var t = ac.currentTime + d;
+                g.gain.setValueAtTime(0.3, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+                o.start(t); o.stop(t + 0.2);
+            });
+
+        } else if (type === 'scanned') {
+            var o = ac.createOscillator();
+            var g = ac.createGain();
+            o.connect(g); g.connect(ac.destination);
+            o.frequency.value = 880;
+            o.type = 'sine';
+            g.gain.setValueAtTime(0.25, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+            o.start(); o.stop(ac.currentTime + 0.15);
+
+        } else if (type === 'error') {
+            var o = ac.createOscillator();
+            var g = ac.createGain();
+            o.connect(g); g.connect(ac.destination);
+            o.frequency.setValueAtTime(400, ac.currentTime);
+            o.frequency.exponentialRampToValueAtTime(100, ac.currentTime + 0.4);
+            o.type = 'sawtooth';
+            g.gain.setValueAtTime(0.2, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.45);
+            o.start(); o.stop(ac.currentTime + 0.45);
+        }
+    } catch(e) {
+        console.warn('Audio playback failed:', e);
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function setStatus(type, msg) {
+    statusBar.className = 'status-bar ' + type;
+    statusTxt.textContent = msg;
+}
+
+
+function dataRow(key, val, cls) {
+    return '<div class="data-row">' +
+        '<span class="dr-key">' + key + '</span>' +
+        '<span class="dr-val ' + (cls || '') + '">' + (val || '—') + '</span>' +
+        '</div>';
+}
+
+
+function flashScreen(color) {
+    var el = document.getElementById('flashOverlay');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'flashOverlay';
+        el.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:0; transition:opacity 0.05s;';
+        document.body.appendChild(el);
+    }
+    el.style.background = color === 'green' ? 'rgba(16,185,129,0.15)'
+                         : color === 'red'   ? 'rgba(239,68,68,0.15)'
+                         :                     'rgba(245,158,11,0.15)';
+    el.style.opacity = '1';
+    setTimeout(function() { el.style.opacity = '0'; }, 400);
+}
+
+
+function getCookie(name) {
+    var v = '; ' + document.cookie;
+    var p = v.split('; ' + name + '=');
+    if (p.length === 2) return p.pop().split(';').shift();
+    return '';
+}
+</script>
+</body>
+</html>

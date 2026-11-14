@@ -1,0 +1,282 @@
+<!-- templates/dashboard/admin_patients.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Manage Patients – MediConnect Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --amber:#F59E0B; --red:#EF4444; --purple:#7C3AED; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:50; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:1200px; margin:0 auto; padding:32px 20px; }
+
+        .page-header { margin-bottom:24px; }
+        .page-title { font-size:26px; font-weight:800; letter-spacing:-0.5px; margin-bottom:4px; }
+        .page-sub { font-size:14px; color:var(--slate); }
+
+        .search-bar {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; padding:6px;
+            display:flex; align-items:center; gap:10px;
+            margin-bottom:24px;
+        }
+        .search-bar i { font-size:18px; color:#94A3B8; margin-left:14px; }
+        .search-input {
+            flex:1; border:none; outline:none;
+            padding:10px 6px; font-size:14px;
+            font-family:'Inter',sans-serif;
+        }
+        .search-input::placeholder { color:#CBD5E1; }
+
+        /* Stats */
+        .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+        .stat-card { background:white; border:1px solid var(--border); border-radius:14px; padding:18px; }
+        .stat-icon { width:42px; height:42px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:12px; }
+        .stat-icon.blue   { background:#EFF6FF; color:var(--blue); }
+        .stat-icon.green  { background:#ECFDF5; color:var(--green); }
+        .stat-icon.amber  { background:#FFFBEB; color:var(--amber); }
+        .stat-icon.red    { background:#FEF2F2; color:var(--red); }
+        .stat-val   { font-size:24px; font-weight:900; letter-spacing:-0.5px; }
+        .stat-label { font-size:11px; color:var(--slate); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+        /* Patient table */
+        .patient-table {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; overflow:hidden;
+        }
+
+        .table-header {
+            padding:16px 22px; border-bottom:1px solid var(--border);
+            background:linear-gradient(90deg,#F8FAFC,white);
+            display:flex; align-items:center; gap:10px;
+        }
+        .table-header i  { font-size:20px; color:var(--blue); }
+        .table-header h3 { font-size:15px; font-weight:800; flex:1; }
+        .table-header .count {
+            font-size:12px; color:var(--slate);
+            background:var(--light); padding:4px 12px;
+            border-radius:100px; font-weight:700;
+        }
+
+        .table-list { padding:0; }
+
+        .patient-row {
+            display:grid;
+            grid-template-columns:auto 2fr 1.5fr 1fr 1fr auto;
+            gap:16px; align-items:center;
+            padding:14px 22px;
+            border-bottom:1px solid #F8FAFC;
+            transition:background 0.2s;
+        }
+        .patient-row:last-child { border-bottom:none; }
+        .patient-row:hover { background:#FAFAFA; }
+
+        .pat-avatar {
+            width:42px; height:42px; border-radius:50%;
+            background:linear-gradient(135deg, var(--green), #059669);
+            display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:800; color:white;
+            flex-shrink:0;
+        }
+
+        .pat-name-block { min-width:0; }
+        .pat-name {
+            font-size:14px; font-weight:700; color:var(--dark);
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+        .pat-email {
+            font-size:12px; color:var(--slate); margin-top:2px;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+        }
+
+        .pat-meta { font-size:12px; color:var(--slate); }
+        .pat-meta strong { color:var(--dark); font-size:13px; font-weight:700; display:block; }
+
+        .blood-tag {
+            display:inline-block;
+            background:#FEF2F2; color:var(--red);
+            font-size:11px; font-weight:800;
+            padding:4px 10px; border-radius:100px;
+            font-family:'Courier New',monospace;
+        }
+
+        .gender-tag {
+            display:inline-block;
+            font-size:11px; font-weight:700;
+            padding:4px 10px; border-radius:100px;
+            text-transform:capitalize;
+        }
+        .gender-MALE   { background:#EFF6FF; color:var(--blue); }
+        .gender-FEMALE { background:#FDF4FF; color:var(--purple); }
+        .gender-OTHER  { background:#F1F5F9; color:var(--slate); }
+
+        .view-btn {
+            display:inline-flex; align-items:center; gap:5px;
+            background:var(--blue); color:white;
+            text-decoration:none;
+            padding:7px 14px; border-radius:8px;
+            font-size:12px; font-weight:700;
+            transition:all 0.2s;
+        }
+        .view-btn:hover { background:#1D4ED8; }
+
+        .empty-state {
+            text-align:center; padding:60px 30px;
+            color:var(--slate);
+        }
+        .empty-icon { font-size:54px; margin-bottom:14px; opacity:0.3; }
+        .empty-title { font-size:18px; font-weight:700; color:var(--dark); margin-bottom:8px; }
+
+        @media(max-width:900px) {
+            .stats-row { grid-template-columns:repeat(2,1fr); }
+            .patient-row { grid-template-columns:auto 1fr auto; }
+            .pat-meta, .gender-tag { display:none; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back">
+        <i class='bx bx-arrow-back'></i> Admin Panel
+    </a>
+</nav>
+
+<div class="content">
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">👤 Manage Patients</h1>
+        <p class="page-sub">{{ patients|length }} patient{{ patients|length|pluralize }} registered in the system</p>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+        <i class='bx bx-search'></i>
+        <input type="text" class="search-input" placeholder="Search by name, email, or phone..."
+               id="searchInput" onkeyup="filterPatients()"/>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class='bx bx-group'></i></div>
+            <div class="stat-val">{{ patients|length }}</div>
+            <div class="stat-label">Total Patients</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class='bx bx-check-shield'></i></div>
+            <div class="stat-val" id="verifiedCount">0</div>
+            <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class='bx bx-male'></i></div>
+            <div class="stat-val" id="maleCount">0</div>
+            <div class="stat-label">Male</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class='bx bx-female'></i></div>
+            <div class="stat-val" id="femaleCount">0</div>
+            <div class="stat-label">Female</div>
+        </div>
+    </div>
+
+    <!-- Patient Table -->
+    <div class="patient-table">
+        <div class="table-header">
+            <i class='bx bx-list-ul'></i>
+            <h3>All Registered Patients</h3>
+            <span class="count">{{ patients|length }} total</span>
+        </div>
+
+        <div class="table-list" id="patientList">
+            {% for patient in patients %}
+            <div class="patient-row" data-search="{{ patient.first_name|lower }} {{ patient.last_name|lower }} {{ patient.email|lower }} {{ patient.phone_number|lower }}" data-gender="{{ patient.gender }}">
+                <div class="pat-avatar">
+                    {{ patient.first_name|slice:":1" }}{{ patient.last_name|slice:":1" }}
+                </div>
+
+                <div class="pat-name-block">
+                    <div class="pat-name">{{ patient.get_full_name }}</div>
+                    <div class="pat-email">📧 {{ patient.email }}</div>
+                </div>
+
+                <div class="pat-meta">
+                    {% if patient.phone_number %}
+                    <strong>📞 {{ patient.phone_number }}</strong>
+                    {% endif %}
+                    Joined {{ patient.date_joined|date:"M Y" }}
+                </div>
+
+                <div>
+                    {% if patient.patient_profile.blood_type %}
+                    <span class="blood-tag">🩸 {{ patient.patient_profile.blood_type }}</span>
+                    {% else %}
+                    <span style="font-size:11px; color:#CBD5E1;">No blood type</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    {% if patient.gender %}
+                    <span class="gender-tag gender-{{ patient.gender }}">
+                        {{ patient.get_gender_display }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <a href="/admin/accounts/customuser/{{ patient.id }}/change/" class="view-btn">
+                    <i class='bx bx-show'></i> View
+                </a>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">👤</div>
+                <div class="empty-title">No patients registered yet</div>
+                <p>Patients can register at /accounts/register/</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Count stats
+document.addEventListener('DOMContentLoaded', function() {
+    var rows = document.querySelectorAll('.patient-row');
+    var verified = 0, male = 0, female = 0;
+
+    rows.forEach(function(row) {
+        verified++;
+        if (row.dataset.gender === 'MALE')   male++;
+        if (row.dataset.gender === 'FEMALE') female++;
+    });
+
+    document.getElementById('verifiedCount').textContent = verified;
+    document.getElementById('maleCount').textContent     = male;
+    document.getElementById('femaleCount').textContent   = female;
+});
+
+// Search filter
+function filterPatients() {
+    var query = document.getElementById('searchInput').value.toLowerCase();
+    var rows  = document.querySelectorAll('.patient-row');
+    rows.forEach(function(row) {
+        var data = row.dataset.search;
+        row.style.display = data.indexOf(query) >= 0 ? '' : 'none';
+    });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!-- templates/dashboard/admin_barcode_sheet.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Staff Barcode Sheet — Print</title>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; margin: 0; }
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .print-bar {
+            background: #1E293B;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .print-btn {
+            background: #2563EB;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .sheet {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .barcode-card {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        .barcode-card h3 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .barcode-card .role {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .barcode-card img {
+            max-width: 100%;
+            height: auto;
+            margin: 8px 0;
+        }
+        .barcode-card .id {
+            font-family: monospace;
+            font-size: 11px;
+            color: #2563EB;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+    <div>
+        <strong>📄 Staff Barcode Sheet</strong> — {{ cards|length }} cards
+    </div>
+    <button class="print-btn" onclick="window.print()">🖨️ Print Sheet</button>
+</div>
+
+<div class="sheet">
+    {% for card in cards %}
+    <div class="barcode-card">
+        <h3>{{ card.user.get_full_name }}</h3>
+        <div class="role">{{ card.designation }} · #{{ card.staff_id_number }}</div>
+        {% if card.barcode_image %}
+        <img src="{{ card.barcode_image.url }}" alt="Barcode"/>
+        {% endif %}
+        <div class="id">{{ card.access_code }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!-- templates/appointments/doctor_profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dr. {{ doctor.get_full_name }} – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        /* NAV */
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:100;
+        }
+
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+
+        .nav-back {
+            display:flex; align-items:center; gap:6px;
+            font-size:13px; font-weight:600; color:var(--slate);
+            text-decoration:none; padding:8px 14px;
+            border:1px solid var(--border); border-radius:8px;
+        }
+
+        .nav-back:hover { color:var(--blue); border-color:var(--blue); }
+
+        /* HERO */
+        .profile-hero {
+            background:linear-gradient(135deg,#1E3A8A,#2563EB,#0EA5E9);
+            padding:48px 5%;
+            position:relative; overflow:hidden;
+        }
+
+        .profile-hero::before {
+            content:'';
+            position:absolute; top:-80px; right:-80px;
+            width:300px; height:300px;
+            background:rgba(255,255,255,0.05); border-radius:50%;
+        }
+
+        .hero-inner {
+            max-width:1100px; margin:0 auto;
+            display:flex; align-items:center; gap:36px;
+            position:relative; z-index:1;
+        }
+
+        .hero-avatar {
+            width:120px; height:120px;
+            border-radius:50%;
+            border:4px solid rgba(255,255,255,0.3);
+            background:linear-gradient(135deg,rgba(255,255,255,0.2),rgba(255,255,255,0.1));
+            display:flex; align-items:center; justify-content:center;
+            font-size:42px; font-weight:900; color:white;
+            flex-shrink:0;
+            box-shadow:0 12px 40px rgba(0,0,0,0.2);
+        }
+
+        .hero-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+        .hero-info { flex:1; }
+
+        .hero-badge {
+            display:inline-flex; align-items:center; gap:6px;
+            background:rgba(255,255,255,0.15);
+            border:1px solid rgba(255,255,255,0.25);
+            color:white; font-size:12px; font-weight:700;
+            padding:5px 14px; border-radius:100px; margin-bottom:12px;
+        }
+
+        .hero-name { font-size:clamp(24px,4vw,36px); font-weight:900; color:white; letter-spacing:-1px; margin-bottom:6px; }
+        .hero-specialty { font-size:16px; color:rgba(255,255,255,0.75); margin-bottom:16px; }
+
+        .hero-stats { display:flex; gap:32px; flex-wrap:wrap; }
+
+        .h-stat { text-align:center; }
+        .h-stat-val { font-size:22px; font-weight:900; color:white; }
+        .h-stat-lbl { font-size:11px; color:rgba(255,255,255,0.55); font-weight:500; margin-top:2px; }
+
+        .hero-fee {
+            background:rgba(255,255,255,0.15);
+            border:1px solid rgba(255,255,255,0.25);
+            border-radius:14px; padding:20px 28px;
+            text-align:center; flex-shrink:0;
+        }
+
+        .fee-label { font-size:11px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+        .fee-amount { font-size:32px; font-weight:900; color:white; letter-spacing:-1px; }
+        .fee-per { font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px; }
+
+        /* CONTENT */
+        .page-content { max-width:1100px; margin:0 auto; padding:36px 5%; }
+
+        .content-grid { display:grid; grid-template-columns:2fr 1fr; gap:24px; }
+
+        /* Left column */
+        .left-col { display:flex; flex-direction:column; gap:24px; }
+
+        .info-card {
+            background:white; border:1px solid var(--border);
+            border-radius:16px; overflow:hidden;
+        }
+
+        .info-card-header {
+            padding:18px 24px; border-bottom:1px solid var(--border);
+            display:flex; align-items:center; gap:10px;
+        }
+
+        .info-card-header i { font-size:20px; color:var(--blue); }
+        .info-card-header h3 { font-size:15px; font-weight:700; }
+
+        .info-card-body { padding:24px; }
+
+        .info-card-body p { font-size:15px; color:var(--slate); line-height:1.8; }
+
+        .tags { display:flex; gap:8px; flex-wrap:wrap; }
+
+        .tag {
+            background:#EFF6FF; color:var(--blue);
+            font-size:12px; font-weight:600;
+            padding:5px 14px; border-radius:100px;
+        }
+
+        .tag.green  { background:#ECFDF5; color:var(--green); }
+        .tag.amber  { background:#FFFBEB; color:var(--amber); }
+
+        /* Review item */
+        .review-item {
+            padding:16px 0;
+            border-bottom:1px solid var(--border);
+        }
+
+        .review-item:last-child { border-bottom:none; }
+
+        .review-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+        .reviewer-name { font-size:14px; font-weight:700; }
+
+        .review-stars { display:flex; gap:2px; }
+        .review-stars span { font-size:12px; color:#FCD34D; }
+
+        .review-text { font-size:13px; color:var(--slate); line-height:1.6; }
+        .review-date { font-size:11px; color:#CBD5E1; margin-top:6px; }
+
+        /* Right column — booking widget */
+        .booking-widget {
+            background:white;
+            border:1px solid var(--border);
+            border-radius:16px;
+            overflow:hidden;
+            position:sticky;
+            top:80px;
+        }
+
+        .widget-header {
+            background:linear-gradient(135deg,var(--dark),#0F172A);
+            padding:20px 24px;
+        }
+
+        .widget-header h3 { font-size:16px; font-weight:800; color:white; margin-bottom:4px; }
+        .widget-header p  { font-size:12px; color:rgba(255,255,255,0.5); }
+
+        .widget-body { padding:20px; }
+
+        /* Date selector */
+        .date-selector { margin-bottom:20px; }
+
+        .selector-label {
+            font-size:12px; font-weight:700; color:var(--slate);
+            text-transform:uppercase; letter-spacing:1px;
+            margin-bottom:12px;
+        }
+
+        .date-input {
+            width:100%; padding:12px 14px;
+            border:2px solid var(--border); border-radius:10px;
+            font-size:14px; font-family:'Inter',sans-serif;
+            color:var(--dark); outline:none;
+            transition:border-color 0.2s;
+        }
+
+        .date-input:focus { border-color:var(--blue); }
+
+        /* Time slots */
+        .slots-section { margin-bottom:20px; }
+
+        .slots-loading {
+            padding:24px; text-align:center;
+            font-size:13px; color:var(--slate);
+        }
+
+        .slots-grid {
+            display:grid;
+            grid-template-columns:repeat(2, 1fr);
+            gap:8px;
+        }
+
+        .slot-btn {
+            padding:10px 8px;
+            border:2px solid var(--border);
+            border-radius:10px;
+            background:white;
+            font-size:13px; font-weight:600;
+            color:var(--slate);
+            cursor:pointer;
+            transition:all 0.2s;
+            text-align:center;
+        }
+
+        .slot-btn:hover {
+            border-color:var(--blue);
+            color:var(--blue);
+            background:#EFF6FF;
+        }
+
+        .slot-btn.selected {
+            background:var(--blue);
+            border-color:var(--blue);
+            color:white;
+        }
+
+        .no-slots {
+            padding:20px; text-align:center;
+            font-size:13px; color:var(--slate);
+            background:var(--light);
+            border-radius:10px;
+        }
+
+        /* Complaint box */
+        .complaint-box {
+            margin-bottom:20px;
+        }
+
+        .complaint-textarea {
+            width:100%; padding:12px 14px;
+            border:2px solid var(--border);
+            border-radius:10px;
+            font-size:13px; font-family:'Inter',sans-serif;
+            color:var(--dark); resize:none;
+            outline:none; transition:border-color 0.2s;
+        }
+
+        .complaint-textarea:focus { border-color:var(--blue); }
+
+        /* Summary box */
+        .booking-summary {
+            background:var(--light); border:1px solid var(--border);
+            border-radius:10px; padding:14px;
+            margin-bottom:16px; display:none;
+        }
+
+        .booking-summary.visible { display:block; }
+
+        .summary-row { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+        .summary-row:last-child { margin-bottom:0; font-weight:700; font-size:14px; border-top:1px solid var(--border); padding-top:8px; margin-top:8px; }
+        .summary-label { color:var(--slate); }
+        .summary-value { color:var(--dark); font-weight:600; }
+        .summary-value.green { color:var(--green); }
+
+        /* Confirm button */
+        .confirm-btn {
+            width:100%;
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; border:none; border-radius:12px;
+            padding:15px; font-size:15px; font-weight:700;
+            font-family:'Inter',sans-serif; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            transition:all 0.3s;
+            box-shadow:0 6px 20px rgba(37,99,235,0.3);
+        }
+
+        .confirm-btn:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 12px 32px rgba(37,99,235,0.4); }
+        .confirm-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+        .secure-note {
+            text-align:center; margin-top:12px;
+            font-size:11px; color:#94A3B8;
+            display:flex; align-items:center; justify-content:center; gap:5px;
+        }
+
+        @media(max-width:900px) {
+            .content-grid { grid-template-columns:1fr; }
+            .booking-widget { position:static; }
+            .hero-inner { flex-direction:column; text-align:center; }
+            .hero-stats { justify-content:center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'appointments:search' %}" class="nav-back">
+        <i class='bx bx-arrow-back'></i> Back to Search
+    </a>
+</nav>
+
+<!-- HERO -->
+<div class="profile-hero">
+    <div class="hero-inner">
+        <div class="hero-avatar">
+            {% if doctor.profile_picture %}
+            <img src="{{ doctor.profile_picture.url }}" alt="{{ doctor.get_full_name }}"/>
+            {% else %}
+            {{ doctor.first_name|slice:":1" }}{{ doctor.last_name|slice:":1" }}
+            {% endif %}
+        </div>
+
+        <div class="hero-info">
+            <div class="hero-badge">
+                <i class='bx bx-check-shield'></i>
+                Verified Medical Professional
+            </div>
+            <div class="hero-name">Dr. {{ doctor.get_full_name }}</div>
+            <div class="hero-specialty">
+                {% if profile %}{{ profile.get_specialty_display }}{% endif %}
+            </div>
+            <div class="hero-stats">
+                <div class="h-stat">
+                    <div class="h-stat-val">
+                        {% if profile %}{{ profile.years_experience }}+{% else %}—{% endif %}
+                    </div>
+                    <div class="h-stat-lbl">Years Exp.</div>
+                </div>
+                <div class="h-stat">
+                    <div class="h-stat-val">
+                        {% if profile %}{{ profile.rating }}★{% else %}—{% endif %}
+                    </div>
+                    <div class="h-stat-lbl">Rating</div>
+                </div>
+                <div class="h-stat">
+                    <div class="h-stat-val">{{ reviews|length }}+</div>
+                    <div class="h-stat-lbl">Reviews</div>
+                </div>
+            </div>
+        </div>
+
+        {% if profile %}
+        <div class="hero-fee">
+            <div class="fee-label">Consultation Fee</div>
+            <div class="fee-amount">${{ profile.consultation_fee }}</div>
+            <div class="fee-per">Per Session</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="page-content">
+    <div class="content-grid">
+
+        <!-- LEFT: Doctor info -->
+        <div class="left-col">
+
+            {% if profile and profile.bio %}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class='bx bx-user'></i>
+                    <h3>About Dr. {{ doctor.last_name }}</h3>
+                </div>
+                <div class="info-card-body">
+                    <p>{{ profile.bio }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if profile %}
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class='bx bx-info-circle'></i>
+                    <h3>Professional Information</h3>
+                </div>
+                <div class="info-card-body">
+                    <div class="tags">
+                        <span class="tag">🩺 {{ profile.get_specialty_display }}</span>
+                        {% if profile.years_experience %}
+                        <span class="tag green">{{ profile.years_experience }} Years Experience</span>
+                        {% endif %}
+                        {% if profile.languages %}
+                        <span class="tag amber">🌐 {{ profile.languages }}</span>
+                        {% endif %}
+                        {% if profile.education %}
+                        <span class="tag">🎓 {{ profile.education|truncatechars:40 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reviews -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <i class='bx bx-star'></i>
+                    <h3>Patient Reviews ({{ reviews|length }})</h3>
+                </div>
+                <div class="info-card-body">
+                    {% for review in reviews %}
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="reviewer-name">{{ review.patient.get_full_name }}</span>
+                            <div class="review-stars">
+                                {% for i in "12345" %}
+                                <span>{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="review-text">{{ review.comment }}</div>
+                        <div class="review-date">{{ review.created_at|timesince }} ago</div>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--slate); font-size:14px;">No reviews yet. Be the first to consult!</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT: Booking widget -->
+        <div>
+            <div class="booking-widget">
+                <div class="widget-header">
+                    <h3>📅 Book Appointment</h3>
+                    <p>Select date and time slot</p>
+                </div>
+
+                <div class="widget-body">
+                    <form
+                        method="POST"
+                        action="{% url 'appointments:book' doctor.id %}"
+                        id="bookingForm"
+                    >
+                        {% csrf_token %}
+
+                        <!-- Hidden fields populated by JS -->
+                        <input type="hidden" name="start_time" id="selectedStart"/>
+                        <input type="hidden" name="end_time"   id="selectedEnd"/>
+
+                        <!-- Date -->
+                        <div class="date-selector">
+                            <div class="selector-label">📅 Select Date</div>
+                            <input
+                                type="date"
+                                name="appointment_date"
+                                id="dateInput"
+                                class="date-input"
+                                min="{{ today }}"
+                                required
+                            />
+                        </div>
+
+                        <!-- Time slots -->
+                        <div class="slots-section">
+                            <div class="selector-label">⏰ Available Time Slots</div>
+                            <div id="slotsContainer">
+                                <div class="slots-loading">
+                                    Select a date to see available slots
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chief complaint -->
+                        <div class="complaint-box">
+                            <div class="selector-label">📝 Reason for Visit</div>
+                            <textarea
+                                name="chief_complaint"
+                                class="complaint-textarea"
+                                rows="3"
+                                placeholder="Briefly describe your symptoms..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Booking summary -->
+                        <div class="booking-summary" id="bookingSummary">
+                            <div class="summary-row">
+                                <span class="summary-label">Doctor</span>
+                                <span class="summary-value">Dr. {{ doctor.get_full_name }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Date</span>
+                                <span class="summary-value" id="summaryDate">—</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Time</span>
+                                <span class="summary-value" id="summaryTime">—</span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="summary-label">Total</span>
+                                <span class="summary-value green">
+                                    ${% if profile %}{{ profile.consultation_fee }}{% else %}0{% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="confirm-btn" id="confirmBtn" disabled>
+                            <i class='bx bx-credit-card'></i>
+                            Proceed to Payment
+                        </button>
+
+                        <div class="secure-note">
+                            <i class='bx bx-lock'></i>
+                            Secured by Stripe — Your card info is never stored
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // All available slots from Django (pre-computed)
+    const allSlots   = {{ available_slots|safe }};
+    const doctorId   = '{{ doctor.id }}';
+
+    const dateInput      = document.getElementById('dateInput');
+    const slotsContainer = document.getElementById('slotsContainer');
+    const confirmBtn     = document.getElementById('confirmBtn');
+    const bookingSummary = document.getElementById('bookingSummary');
+    const summaryDate    = document.getElementById('summaryDate');
+    const summaryTime    = document.getElementById('summaryTime');
+    const selectedStart  = document.getElementById('selectedStart');
+    const selectedEnd    = document.getElementById('selectedEnd');
+
+    let selectedSlot = null;
+
+    // ── Date change handler ──────────────────────────────
+    dateInput.addEventListener('change', async () => {
+        const dateVal = dateInput.value;
+        selectedSlot  = null;
+        selectedStart.value = '';
+        selectedEnd.value   = '';
+        updateConfirmBtn();
+
+        if (!dateVal) {
+            slotsContainer.innerHTML = '<div class="slots-loading">Select a date to see slots</div>';
+            return;
+        }
+
+        slotsContainer.innerHTML = '<div class="slots-loading">⏳ Loading slots...</div>';
+
+        // Check pre-loaded slots first
+        if (allSlots[dateVal] && allSlots[dateVal].length > 0) {
+            renderSlots(allSlots[dateVal], dateVal);
+        } else {
+            // Fallback: fetch from server
+            try {
+                const resp  = await fetch(`/appointments/doctor/${doctorId}/slots/?date=${dateVal}`);
+                const data  = await resp.json();
+                if (data.slots && data.slots.length > 0) {
+                    renderSlots(data.slots, dateVal);
+                } else {
+                    slotsContainer.innerHTML = '<div class="no-slots">😔 No available slots on this date. Try another day.</div>';
+                }
+            } catch (e) {
+                slotsContainer.innerHTML = '<div class="no-slots">Could not load slots. Please refresh.</div>';
+            }
+        }
+    });
+
+    // ── Render slot buttons ──────────────────────────────
+    function renderSlots(slots, dateVal) {
+        const grid = document.createElement('div');
+        grid.className = 'slots-grid';
+
+        slots.forEach(slot => {
+            const btn = document.createElement('button');
+            btn.type      = 'button';
+            btn.className = 'slot-btn';
+            btn.textContent = slot.label;
+            btn.dataset.start = slot.start;
+            btn.dataset.end   = slot.end;
+            btn.dataset.label = slot.label;
+
+            btn.addEventListener('click', () => selectSlot(btn, slot, dateVal));
+            grid.appendChild(btn);
+        });
+
+        slotsContainer.innerHTML = '';
+        slotsContainer.appendChild(grid);
+    }
+
+    // ── Slot selection ───────────────────────────────────
+    function selectSlot(btn, slot, dateVal) {
+        // Deselect all
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        selectedSlot = slot;
+        selectedStart.value = slot.start;
+        selectedEnd.value   = slot.end;
+
+        // Update summary
+        const dateObj = new Date(dateVal + 'T00:00:00');
+        summaryDate.textContent = dateObj.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+        summaryTime.textContent = slot.label;
+
+        bookingSummary.classList.add('visible');
+        updateConfirmBtn();
+    }
+
+    // ── Enable/disable confirm button ────────────────────
+    function updateConfirmBtn() {
+        const hasDate = dateInput.value !== '';
+        const hasSlot = selectedSlot !== null;
+        confirmBtn.disabled = !(hasDate && hasSlot);
+    }
+
+    // Set min date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+</script>
+
+</body>
+</html>

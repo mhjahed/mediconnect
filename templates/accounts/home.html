@@ -1,0 +1,512 @@
+<!-- templates/accounts/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MediConnect – Modern Healthcare Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:   #2563EB;
+            --dark:   #1E293B;
+            --green:  #10B981;
+            --light:  #F8FAFC;
+            --slate:  #64748B;
+            --white:  #FFFFFF;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            overflow-x: hidden;
+        }
+
+        /* ── NAV ── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(37,99,235,0.1);
+            padding: 0 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .nav-logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--dark);
+            letter-spacing: -1px;
+            text-decoration: none;
+        }
+
+        .nav-logo span { color: var(--blue); }
+
+        .nav-links { display: flex; align-items: center; gap: 8px; }
+
+        .nav-btn {
+            padding: 10px 22px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-btn.outline {
+            color: var(--blue);
+            border: 2px solid var(--blue);
+            background: transparent;
+        }
+
+        .nav-btn.outline:hover {
+            background: var(--blue);
+            color: white;
+        }
+
+        .nav-btn.filled {
+            background: var(--blue);
+            color: white;
+            border: 2px solid var(--blue);
+            box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+        }
+
+        .nav-btn.filled:hover {
+            background: #1D4ED8;
+            transform: translateY(-1px);
+        }
+
+        /* ── HERO ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 5% 60px;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 40%, #F0F9FF 100%);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -100px;
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(37,99,235,0.1);
+            border: 1px solid rgba(37,99,235,0.2);
+            color: var(--blue);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 6vw, 72px);
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            color: var(--dark);
+            margin-bottom: 24px;
+        }
+
+        .hero h1 span { color: var(--blue); }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--slate);
+            line-height: 1.7;
+            max-width: 580px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 36px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .hero-btn.primary {
+            background: linear-gradient(135deg, var(--blue), #1D4ED8);
+            color: white;
+            box-shadow: 0 8px 32px rgba(37,99,235,0.35);
+        }
+
+        .hero-btn.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 48px rgba(37,99,235,0.45);
+        }
+
+        .hero-btn.secondary {
+            background: white;
+            color: var(--dark);
+            border: 2px solid #E2E8F0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+
+        .hero-btn.secondary:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+            transform: translateY(-2px);
+        }
+
+        /* ── STATS ── */
+        .stats-bar {
+            background: var(--dark);
+            padding: 40px 5%;
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { text-align: center; }
+        .stat-num { font-size: 36px; font-weight: 900; color: white; letter-spacing: -1px; }
+        .stat-num span { color: var(--blue); }
+        .stat-label { font-size: 13px; color: #94A3B8; margin-top: 4px; font-weight: 500; }
+
+        /* ── SERVICES ── */
+        .section {
+            padding: 80px 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header { text-align: center; margin-bottom: 56px; }
+        .section-label {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--blue);
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: var(--dark);
+            margin-bottom: 16px;
+        }
+
+        .section-header p { font-size: 16px; color: var(--slate); max-width: 520px; margin: 0 auto; }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .service-card {
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 20px;
+            padding: 36px 28px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--green));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 60px rgba(37,99,235,0.12);
+            border-color: rgba(37,99,235,0.2);
+        }
+
+        .service-card:hover::before { transform: scaleX(1); }
+
+        .service-icon {
+            width: 60px; height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 { font-size: 18px; font-weight: 700; color: var(--dark); margin-bottom: 10px; }
+        .service-card p  { font-size: 14px; color: var(--slate); line-height: 1.6; }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+            background: linear-gradient(135deg, var(--dark), #0F172A);
+            padding: 80px 5%;
+        }
+
+        .how-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .how-step {
+            text-align: center;
+            padding: 32px 20px;
+        }
+
+        .step-num {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--blue), #3B82F6);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 900; color: white;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+        }
+
+        .how-step h3 { font-size: 16px; font-weight: 700; color: white; margin-bottom: 8px; }
+        .how-step p  { font-size: 13px; color: #94A3B8; line-height: 1.6; }
+
+        /* ── CTA ── */
+        .cta-section {
+            background: linear-gradient(135deg, var(--blue), #1D4ED8, #0EA5E9);
+            padding: 80px 5%;
+            text-align: center;
+        }
+
+        .cta-section h2 { font-size: 40px; font-weight: 900; color: white; letter-spacing: -1px; margin-bottom: 16px; }
+        .cta-section p  { font-size: 18px; color: rgba(255,255,255,0.8); margin-bottom: 40px; }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: var(--blue);
+            font-size: 16px;
+            font-weight: 800;
+            padding: 18px 48px;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+
+        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.3); }
+
+        /* ── FOOTER ── */
+        footer {
+            background: #0F172A;
+            padding: 40px 5%;
+            text-align: center;
+        }
+
+        .footer-logo { font-size: 20px; font-weight: 900; color: white; margin-bottom: 8px; }
+        .footer-logo span { color: var(--blue); }
+        footer p { font-size: 13px; color: #475569; margin-top: 16px; }
+
+        @media (max-width: 768px) {
+            .stats-bar { gap: 32px; }
+            .hero-btns { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <div class="nav-links">
+        <a href="{% url 'accounts:login' %}" class="nav-btn outline">Sign In</a>
+        <a href="{% url 'accounts:register_patient' %}" class="nav-btn filled">Get Started</a>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <i class='bx bx-pulse'></i>
+            Next-Generation Telemedicine Platform
+        </div>
+        <h1>Healthcare<br/><span>At Your Fingertips</span></h1>
+        <p>Connect with certified doctors through secure video consultations. Book appointments, receive prescriptions, and manage your health — all in one place.</p>
+        <div class="hero-btns">
+            <a href="{% url 'accounts:register_patient' %}" class="hero-btn primary">
+                <i class='bx bx-user-plus'></i>
+                Book a Consultation
+            </a>
+            <a href="{% url 'accounts:login' %}" class="hero-btn secondary">
+                <i class='bx bx-log-in'></i>
+                Sign In
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+    <div class="stat-item">
+        <div class="stat-num">500<span>+</span></div>
+        <div class="stat-label">Certified Doctors</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">50<span>K+</span></div>
+        <div class="stat-label">Patients Served</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">20<span>+</span></div>
+        <div class="stat-label">Specialties</div>
+    </div>
+    <div class="stat-item">
+        <div class="stat-num">99<span>%</span></div>
+        <div class="stat-label">Satisfaction Rate</div>
+    </div>
+</div>
+
+<!-- SERVICES -->
+<div style="padding: 80px 5%;">
+    <div class="section-header">
+        <span class="section-label">Our Specialties</span>
+        <h2>World-Class Medical Departments</h2>
+        <p>Access top specialists across all major medical fields from the comfort of your home.</p>
+    </div>
+    <div class="services-grid" style="max-width:1200px; margin:0 auto;">
+        {% for service in services %}
+        <div class="service-card">
+            <div class="service-icon" style="background:{{ service.bg }};">{{ service.icon }}</div>
+            <h3>{{ service.name }}</h3>
+            <p>{{ service.desc }}</p>
+        </div>
+        {% empty %}
+        <div class="service-card">
+            <div class="service-icon" style="background:#EFF6FF;">❤️</div>
+            <h3>Cardiology</h3>
+            <p>Expert heart care and cardiovascular consultations with leading cardiologists.</p>
+        </div>
+        <div class="service-card">
+            <div class="service-icon" style="background:#F0FDF4;">🧠</div>
+            <h3>Neurology</h3>
+            <p>Comprehensive neurological assessments and treatment planning.</p>
+        </div>
+        <div class="service-card">
+            <div class="service-icon" style="background:#FFF7ED;">🦷</div>
+            <h3>Dentistry</h3>
+            <p>Virtual dental consultations and treatment recommendations.</p>
+        </div>
+        <div class="service-card">
+            <div class="service-icon" style="background:#FDF4FF;">🔬</div>
+            <h3>Dermatology</h3>
+            <p>Skin condition assessments and personalised treatment plans.</p>
+        </div>
+        <div class="service-card">
+            <div class="service-icon" style="background:#F0F9FF;">👶</div>
+            <h3>Pediatrics</h3>
+            <p>Dedicated child healthcare with experienced pediatric specialists.</p>
+        </div>
+        <div class="service-card">
+            <div class="service-icon" style="background:#ECFDF5;">🩺</div>
+            <h3>General Practice</h3>
+            <p>Your first point of contact for all general health concerns.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how-section">
+    <div style="text-align:center; margin-bottom:56px;">
+        <span class="section-label" style="color:#60A5FA;">How It Works</span>
+        <h2 style="font-size:40px;font-weight:800;color:white;letter-spacing:-1px;margin-top:8px;">Simple. Fast. Secure.</h2>
+    </div>
+    <div class="how-grid">
+        <div class="how-step">
+            <div class="step-num">1</div>
+            <h3>Create Account</h3>
+            <p>Register in under 2 minutes with your email and basic information.</p>
+        </div>
+        <div class="how-step">
+            <div class="step-num">2</div>
+            <h3>Find Your Doctor</h3>
+            <p>Search by specialty, name, or availability. View profiles and ratings.</p>
+        </div>
+        <div class="how-step">
+            <div class="step-num">3</div>
+            <h3>Book & Pay</h3>
+            <p>Select your preferred time slot and complete secure payment via Stripe.</p>
+        </div>
+        <div class="how-step">
+            <div class="step-num">4</div>
+            <h3>Consult via Meet</h3>
+            <p>Join your Google Meet session and receive your prescription digitally.</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+    <h2>Start Your Health Journey Today</h2>
+    <p>Join thousands of patients who trust MediConnect for their healthcare needs.</p>
+    <a href="{% url 'accounts:register_patient' %}" class="cta-btn">
+        <i class='bx bx-rocket'></i>
+        Get Started — It's Free
+    </a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-logo">Medi<span>Connect</span></div>
+    <p>Bringing World-Class Healthcare to Your Screen</p>
+    <p style="margin-top:8px;">© 2025 MediConnect Health Technologies. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

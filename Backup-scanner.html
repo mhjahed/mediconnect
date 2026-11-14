@@ -1,0 +1,1180 @@
+<!-- access_control/templates/access_control/scanner.html -->
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>MediConnect | Access Scanner</title>
+    <link rel="icon" href="{% static 'images/favicon.ico' %}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+
+    <!--
+        ZXing Library served from LOCAL Django static files.
+        NO CDN — works even with Tracking Prevention enabled.
+        Reads: QR, Code128, Code39, EAN-13, EAN-8, UPC-A, UPC-E,
+               DataMatrix, PDF417, Aztec, ITF, Codabar, RSS-14
+    -->
+    <script src="{% static 'js/vendor/zxing.min.js' %}"></script>
+
+    <style>
+        :root {
+            --blue:   #2563EB;
+            --dark:   #1E293B;
+            --green:  #10B981;
+            --red:    #EF4444;
+            --amber:  #F59E0B;
+            --purple: #7C3AED;
+            --white:  #FFFFFF;
+            --slate:  #64748B;
+            --border: rgba(255,255,255,0.08);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #0C4A6E 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .page-wrap { max-width: 1100px; margin: 0 auto; }
+
+        /* ── Header ── */
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--blue), #3B82F6);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 8px 24px rgba(37,99,235,0.4);
+        }
+
+        .brand-text h1 { font-size: 20px; font-weight: 800; color: var(--white); }
+        .brand-text p  { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+        .back-btn {
+            display: flex; align-items: center; gap: 6px;
+            color: rgba(255,255,255,0.5); font-size: 13px; font-weight: 600;
+            text-decoration: none;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            padding: 8px 16px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover { color: var(--white); border-color: rgba(255,255,255,0.2); }
+
+        /* ── Library status banner ── */
+        .lib-status {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lib-status.ok     { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #6EE7B7; }
+        .lib-status.error  { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #FCA5A5; }
+        .lib-status.loading{ background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.25); color: #93C5FD; }
+
+        /* ── Main grid ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* ── Card ── */
+        .card {
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header i   { font-size: 18px; color: var(--blue); }
+        .card-header h3  { font-size: 14px; font-weight: 700; color: var(--white); flex: 1; }
+        .card-header span{ font-size: 11px; color: rgba(255,255,255,0.35); }
+
+        .card-body { padding: 16px; }
+
+        /* ── Room list ── */
+        .room-list { max-height: 600px; overflow-y: auto; padding-right: 4px; }
+        .room-list::-webkit-scrollbar { width: 3px; }
+        .room-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .floor-label {
+            font-size: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 2px;
+            color: rgba(255,255,255,0.25);
+            padding: 10px 8px 6px;
+        }
+
+        .room-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+            margin-bottom: 4px;
+        }
+
+        .room-item:hover  { background: rgba(255,255,255,0.04); border-color: rgba(37,99,235,0.2); }
+        .room-item.active { background: rgba(37,99,235,0.15); border-color: var(--blue); }
+
+        .room-icon-wrap {
+            width: 36px; height: 36px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+
+        .room-item.active .room-icon-wrap { background: rgba(37,99,235,0.2); }
+
+        .room-info { flex: 1; min-width: 0; }
+        .room-name { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .room-floor{ font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+
+        .room-check { font-size: 16px; color: var(--blue); display: none; }
+        .room-item.active .room-check { display: block; }
+
+        /* ── Right panel ── */
+        .right-panel { display: flex; flex-direction: column; gap: 16px; }
+
+        /* Video + controls */
+        .scanner-card { }
+
+        .video-area {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/10;
+            border: 2px solid rgba(255,255,255,0.06);
+        }
+
+        #scanVideo {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+        }
+
+        /* Scanning overlay */
+        .scan-overlay {
+            position: absolute;
+            inset: 0;
+            display: none;
+            pointer-events: none;
+        }
+
+        .scan-overlay.active { display: block; }
+
+        .scan-line-h {
+            position: absolute;
+            left: 5%; right: 5%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), var(--blue), transparent);
+            box-shadow: 0 0 16px var(--blue), 0 0 32px rgba(37,99,235,0.4);
+            border-radius: 2px;
+            animation: scanV 2.5s ease-in-out infinite;
+            top: 5%;
+        }
+
+        @keyframes scanV {
+            0%   { top: 5%; }
+            50%  { top: 88%; }
+            100% { top: 5%; }
+        }
+
+        /* Corner markers */
+        .corner-mark {
+            position: absolute;
+            width: 28px; height: 28px;
+            border-color: rgba(37,99,235,0.9);
+            border-style: solid;
+        }
+
+        .cm-tl { top: 10px; left: 10px; border-width: 3px 0 0 3px; border-radius: 3px 0 0 0; }
+        .cm-tr { top: 10px; right:10px; border-width: 3px 3px 0 0; border-radius: 0 3px 0 0; }
+        .cm-bl { bottom:10px;left: 10px; border-width: 0 0 3px 3px; border-radius: 0 0 0 3px; }
+        .cm-br { bottom:10px;right:10px; border-width: 0 3px 3px 0; border-radius: 0 0 3px 0; }
+
+        /* Format labels overlay */
+        .formats-overlay {
+            position: absolute;
+            bottom: 10px; left: 0; right: 0;
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        /* Camera selector */
+        .camera-row {
+            display: flex; gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .cam-select {
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .cam-select option { background: #1E293B; }
+
+        /* Control buttons */
+        .ctrl-row { display: flex; gap: 8px; margin-bottom: 12px; }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 13px; font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn.primary {
+            background: linear-gradient(135deg, var(--blue), #1D4ED8);
+            color: white;
+            box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+        }
+
+        .ctrl-btn.primary:hover  { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37,99,235,0.45); }
+        .ctrl-btn.primary:active { transform: translateY(0); }
+
+        .ctrl-btn.danger {
+            background: rgba(239,68,68,0.15);
+            color: #FCA5A5;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+
+        .ctrl-btn.danger:hover { background: rgba(239,68,68,0.25); }
+
+        .ctrl-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Status bar */
+        .status-bar {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px; font-weight: 500;
+            margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+            min-height: 46px;
+            transition: all 0.3s;
+        }
+
+        .status-bar.idle      { background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.2); color: rgba(255,255,255,0.45); }
+        .status-bar.scanning  { background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.25); color: #93C5FD; }
+        .status-bar.success   { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); color: #6EE7B7; }
+        .status-bar.denied    { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.25); color: #FCA5A5; animation: shakeStatus 0.4s ease; }
+        .status-bar.captured  { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); color: #FCD34D; }
+        .status-bar.warning   { background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.25); color: #C4B5FD; }
+
+        @keyframes shakeStatus {
+            0%,100%{transform:translateX(0);}
+            20%{transform:translateX(-6px);}
+            40%{transform:translateX(6px);}
+            60%{transform:translateX(-4px);}
+            80%{transform:translateX(4px);}
+        }
+
+        .spinner {
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Result Container ── */
+        .result-container {
+            border-radius: 14px;
+            overflow: hidden;
+            display: none;
+            animation: slideUp 0.35s ease;
+        }
+
+        .result-container.visible { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .rc-header {
+            padding: 16px 18px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+
+        .rc-header.granted  { background: rgba(16,185,129,0.15); border-bottom: 1px solid rgba(16,185,129,0.2); }
+        .rc-header.denied   { background: rgba(239,68,68,0.15); border-bottom: 1px solid rgba(239,68,68,0.2); }
+        .rc-header.captured { background: rgba(245,158,11,0.15); border-bottom: 1px solid rgba(245,158,11,0.2); }
+
+        .rc-header-left { display: flex; align-items: center; gap: 10px; }
+
+        .rc-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .rc-dot.granted  { background: var(--green); box-shadow: 0 0 10px rgba(16,185,129,0.6); animation: pulse-dot 1.5s ease-in-out 3; }
+        .rc-dot.denied   { background: var(--red);   box-shadow: 0 0 10px rgba(239,68,68,0.6); }
+        .rc-dot.captured { background: var(--amber);  box-shadow: 0 0 10px rgba(245,158,11,0.6); }
+
+        @keyframes pulse-dot {
+            0%,100% { transform: scale(1); }
+            50%     { transform: scale(1.4); }
+        }
+
+        .rc-title { font-size: 15px; font-weight: 800; color: var(--white); }
+        .rc-time  { font-size: 11px; color: rgba(255,255,255,0.35); font-family: monospace; }
+
+        .rc-body { background: rgba(0,0,0,0.25); }
+
+        /* Data rows */
+        .data-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 12px;
+        }
+
+        .data-row:last-child  { border-bottom: none; }
+        .data-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+
+        .dr-key {
+            color: rgba(255,255,255,0.35);
+            font-weight: 600;
+            flex-shrink: 0;
+            width: 110px;
+        }
+
+        .dr-val {
+            color: var(--white);
+            font-weight: 600;
+            text-align: right;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .dr-val.mono {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #A5B4FC;
+            letter-spacing: 0.5px;
+        }
+
+        .dr-val.green  { color: #6EE7B7; }
+        .dr-val.red    { color: #FCA5A5; }
+        .dr-val.amber  { color: #FCD34D; }
+
+        /* User info block inside result */
+        .user-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .user-avatar {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; font-weight: 900; color: white;
+            flex-shrink: 0;
+            border: 2px solid rgba(255,255,255,0.15);
+        }
+
+        .ua-green  { background: linear-gradient(135deg, var(--green), #059669); }
+        .ua-red    { background: linear-gradient(135deg, var(--red), #DC2626); }
+        .ua-blue   { background: linear-gradient(135deg, var(--blue), #1D4ED8); }
+
+        .user-block-info { flex: 1; }
+        .ub-name { font-size: 14px; font-weight: 800; color: var(--white); }
+        .ub-role { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+        /* ── Manual input ── */
+        .manual-card .card-body { }
+
+        .manual-hint {
+            font-size: 12px; color: rgba(255,255,255,0.35);
+            margin-bottom: 10px; line-height: 1.5;
+        }
+
+        .manual-input-row { display: flex; gap: 8px; }
+
+        .manual-input {
+            flex: 1;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: var(--white);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .manual-input::placeholder { color: rgba(255,255,255,0.25); }
+        .manual-input:focus { border-color: var(--blue); }
+
+        .manual-btn {
+            background: linear-gradient(135deg, var(--blue), #1D4ED8);
+            color: white; border: none;
+            border-radius: 10px; padding: 12px 20px;
+            font-size: 13px; font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer; transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .manual-btn:hover { transform: translateY(-1px); }
+
+        /* ── Flash overlay ── */
+        .flash-overlay {
+            position: fixed; inset: 0;
+            pointer-events: none; z-index: 9999;
+            opacity: 0; transition: opacity 0.05s;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .room-list { max-height: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Flash overlay for visual feedback -->
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="page-wrap">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="brand">
+            <div class="brand-icon">🏥</div>
+            <div class="brand-text">
+                <h1>Access Scanner</h1>
+                <p>MediConnect — Hospital Room Control</p>
+            </div>
+        </div>
+        <a href="/dashboard/" class="back-btn">
+            <i class='bx bx-arrow-back'></i>
+            Dashboard
+        </a>
+    </div>
+
+    <!-- Library status -->
+    <div class="lib-status loading" id="libStatus">
+        <span class="spinner"></span>
+        <span id="libStatusText">Checking barcode scanner library...</span>
+    </div>
+
+    <!-- Main grid -->
+    <div class="main-grid">
+
+        <!-- LEFT: Room Selector -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-door-open'></i>
+                <h3>Select Room</h3>
+                <span id="selectedRoomLabel">None</span>
+            </div>
+            <div class="card-body">
+                <div class="room-list">
+                    {% if floors %}
+                        {% for floor, zone_list in floors.items %}
+                        <div class="floor-label">
+                            {% if floor == 0 %}Basement{% elif floor == 1 %}Ground Floor{% else %}Floor {{ floor }}{% endif %}
+                        </div>
+                        {% for zone in zone_list %}
+                        <div class="room-item"
+                             data-room="{{ zone.name }}"
+                             data-code="{{ zone.access_code_text }}"
+                             data-type="{{ zone.get_zone_type_display }}"
+                             onclick="selectRoom(this)">
+                            <div class="room-icon-wrap">{{ zone.get_icon }}</div>
+                            <div class="room-info">
+                                <div class="room-name">{{ zone.name }}</div>
+                                <div class="room-floor">{{ zone.get_zone_type_display }}</div>
+                            </div>
+                            <i class='bx bx-check-circle room-check'></i>
+                        </div>
+                        {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                    <div style="padding:24px; text-align:center; color:rgba(255,255,255,0.3); font-size:13px;">
+                        No rooms configured.<br/>
+                        <a href="/admin/access_control/accesszone/add/"
+                           style="color:var(--blue); font-size:12px;">Add zones in Admin →</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Scanner + Results -->
+        <div class="right-panel">
+
+            <!-- Scanner card -->
+            <div class="card scanner-card">
+                <div class="card-header">
+                    <i class='bx bx-scan'></i>
+                    <h3>Barcode / QR Scanner</h3>
+                    <span id="formatLabel">All formats</span>
+                </div>
+                <div class="card-body">
+
+                    <!-- Camera select -->
+                    <div class="camera-row">
+                        <select class="cam-select" id="camSelect">
+                            <option value="">📷 Detecting cameras...</option>
+                        </select>
+                    </div>
+
+                    <!-- Video -->
+                    <div class="video-area">
+                        <video id="scanVideo" autoplay playsinline muted></video>
+                        <div class="scan-overlay" id="scanOverlay">
+                            <div class="scan-line-h"></div>
+                            <div class="corner-mark cm-tl"></div>
+                            <div class="corner-mark cm-tr"></div>
+                            <div class="corner-mark cm-bl"></div>
+                            <div class="corner-mark cm-br"></div>
+                            <div class="formats-overlay">
+                                QR · Code128 · Code39 · EAN-13 · UPC · DataMatrix · PDF417 · Aztec · ITF
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="ctrl-row" style="margin-top:12px;">
+                        <button class="ctrl-btn primary" id="btnStart" onclick="startScanner()">
+                            <i class='bx bx-camera'></i> Start Scanner
+                        </button>
+                        <button class="ctrl-btn danger" id="btnStop" onclick="stopScanner()" disabled>
+                            <i class='bx bx-stop'></i> Stop
+                        </button>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="status-bar idle" id="statusBar">
+                        <i class='bx bx-info-circle'></i>
+                        <span id="statusTxt">Press "Start Scanner" to activate camera</span>
+                    </div>
+
+                    <!-- Result container -->
+                    <div class="result-container" id="resultContainer">
+                        <div class="rc-header" id="rcHeader">
+                            <div class="rc-header-left">
+                                <div class="rc-dot" id="rcDot"></div>
+                                <div class="rc-title" id="rcTitle">Result</div>
+                            </div>
+                            <div class="rc-time" id="rcTime"></div>
+                        </div>
+                        <div class="rc-body" id="rcBody"></div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Manual input -->
+            <div class="card manual-card">
+                <div class="card-header">
+                    <i class='bx bx-keyboard'></i>
+                    <h3>Manual Entry</h3>
+                    <span>Fallback</span>
+                </div>
+                <div class="card-body">
+                    <p class="manual-hint">
+                        Type, paste, or use a USB barcode scanner connected as keyboard input.
+                        Works for all barcode formats.
+                    </p>
+                    <div class="manual-input-row">
+                        <input
+                            type="text"
+                            class="manual-input"
+                            id="manualInput"
+                            placeholder="Paste barcode text / scan with USB scanner..."
+                            autocomplete="off"
+                            spellcheck="false"
+                        />
+                        <button class="manual-btn" onclick="submitManual()">
+                            <i class='bx bx-check'></i> Verify
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+// ════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════
+let codeReader   = null;
+let isCooldown   = false;
+let isActive     = false;
+let selectedRoom = '';
+let controls     = null;   // ZXing browser controls
+
+const COOLDOWN_MS = 3000;
+
+// DOM refs
+const scanVideo      = document.getElementById('scanVideo');
+const scanOverlay    = document.getElementById('scanOverlay');
+const statusBar      = document.getElementById('statusBar');
+const statusTxt      = document.getElementById('statusTxt');
+const resultContainer= document.getElementById('resultContainer');
+const rcHeader       = document.getElementById('rcHeader');
+const rcDot          = document.getElementById('rcDot');
+const rcTitle        = document.getElementById('rcTitle');
+const rcTime         = document.getElementById('rcTime');
+const rcBody         = document.getElementById('rcBody');
+const btnStart       = document.getElementById('btnStart');
+const btnStop        = document.getElementById('btnStop');
+const camSelect      = document.getElementById('camSelect');
+const libStatus      = document.getElementById('libStatus');
+const libStatusText  = document.getElementById('libStatusText');
+
+
+// ════════════════════════════════════════════════════════════
+// INIT — Check ZXing library loaded
+// ════════════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+
+    // Check if ZXing loaded from local static file
+    if (typeof ZXing === 'undefined') {
+        libStatus.className   = 'lib-status error';
+        libStatusText.textContent = '❌ Barcode library not loaded. Download zxing.min.js to static/js/vendor/';
+        btnStart.disabled = true;
+        return;
+    }
+
+    libStatus.className   = 'lib-status ok';
+    libStatusText.textContent = '✅ ZXing barcode library loaded — reads QR, Code128, Code39, EAN, UPC, DataMatrix, PDF417, Aztec, ITF';
+
+    // Create reader with ALL formats enabled
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+        ZXing.BarcodeFormat.QR_CODE,
+        ZXing.BarcodeFormat.CODE_128,
+        ZXing.BarcodeFormat.CODE_39,
+        ZXing.BarcodeFormat.CODE_93,
+        ZXing.BarcodeFormat.EAN_13,
+        ZXing.BarcodeFormat.EAN_8,
+        ZXing.BarcodeFormat.UPC_A,
+        ZXing.BarcodeFormat.UPC_E,
+        ZXing.BarcodeFormat.DATA_MATRIX,
+        ZXing.BarcodeFormat.PDF_417,
+        ZXing.BarcodeFormat.AZTEC,
+        ZXing.BarcodeFormat.ITF,
+        ZXing.BarcodeFormat.CODABAR,
+        ZXing.BarcodeFormat.RSS_14,
+        ZXing.BarcodeFormat.RSS_EXPANDED,
+        ZXing.BarcodeFormat.MAXICODE,
+    ]);
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);
+
+    codeReader = new ZXing.BrowserMultiFormatReader(hints, {
+        delayBetweenScanAttempts: 100,
+        delayBetweenScanSuccess: 1500,
+    });
+
+    // Load cameras
+    await loadCameras();
+});
+
+
+// ════════════════════════════════════════════════════════════
+// LOAD AVAILABLE CAMERAS
+// ════════════════════════════════════════════════════════════
+async function loadCameras() {
+    try {
+        const devices = await ZXing.BrowserCodeReader.listVideoInputDevices();
+
+        camSelect.innerHTML = '';
+
+        if (devices.length === 0) {
+            camSelect.innerHTML = '<option>No cameras detected</option>';
+            setStatus('warning', '⚠ No camera found — use manual entry below');
+            return;
+        }
+
+        devices.forEach((device, i) => {
+            const opt   = document.createElement('option');
+            opt.value   = device.deviceId;
+            const label = device.label || `Camera ${i + 1}`;
+            opt.textContent = label;
+            // Prefer back camera
+            if (label.toLowerCase().includes('back') ||
+                label.toLowerCase().includes('rear') ||
+                label.toLowerCase().includes('environment')) {
+                opt.selected = true;
+            }
+            camSelect.appendChild(opt);
+        });
+
+        setStatus('idle', `📷 ${devices.length} camera(s) found. Press "Start Scanner" to begin.`);
+
+    } catch (err) {
+        console.warn('Camera list error:', err);
+        camSelect.innerHTML = '<option value="">Default camera</option>';
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// START SCANNER
+// ════════════════════════════════════════════════════════════
+async function startScanner() {
+    if (!codeReader) {
+        setStatus('warning', '⚠ Library not ready. Refresh the page.');
+        return;
+    }
+
+    if (isActive) return;
+
+    const deviceId = camSelect.value || undefined;
+
+    btnStart.disabled = true;
+    btnStop.disabled  = false;
+    setStatus('scanning', null, true);
+
+    try {
+        // ZXing continuously decodes from video stream
+        // It handles ALL formats automatically based on the hints we set
+        controls = await codeReader.decodeFromVideoDevice(
+            deviceId,
+            'scanVideo',
+            (result, error, ctrl) => {
+                if (result && !isCooldown) {
+                    // ✅ BARCODE/QR DETECTED
+                    const rawText = result.getText();
+                    const format  = result.getBarcodeFormat();
+                    const fmtName = getBarcodeFormatName(format);
+
+                    document.getElementById('formatLabel').textContent = fmtName;
+                    onBarcodeDetected(rawText, fmtName);
+                }
+
+                // Ignore: error is thrown every frame when nothing detected
+                // That's normal ZXing behavior
+            }
+        );
+
+        isActive = true;
+        scanOverlay.classList.add('active');
+        setStatus('scanning', '🔍 Scanning... Point at any barcode or QR code');
+
+    } catch (err) {
+        console.error('Scanner start error:', err);
+        btnStart.disabled = false;
+        btnStop.disabled  = true;
+        isActive = false;
+
+        if (err.name === 'NotAllowedError') {
+            setStatus('denied', '❌ Camera permission denied. Allow camera in browser settings.');
+        } else {
+            setStatus('denied', `❌ ${err.message}`);
+        }
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// STOP SCANNER
+// ════════════════════════════════════════════════════════════
+function stopScanner() {
+    if (controls) {
+        controls.stop();
+        controls = null;
+    }
+    if (codeReader) {
+        codeReader.reset();
+    }
+
+    scanOverlay.classList.remove('active');
+    isActive = false;
+
+    btnStart.disabled = false;
+    btnStop.disabled  = true;
+
+    setStatus('idle', '⏸ Scanner stopped. Press "Start Scanner" to resume.');
+}
+
+
+// ════════════════════════════════════════════════════════════
+// BARCODE DETECTED — Core handler
+// ════════════════════════════════════════════════════════════
+function onBarcodeDetected(rawText, fmtName) {
+    console.log(`✅ BARCODE READ | Format: ${fmtName} | Text: "${rawText}"`);
+
+    isCooldown = true;
+    setTimeout(() => { isCooldown = false; }, COOLDOWN_MS);
+
+    playSound('scanned');
+    setStatus('captured', `📦 ${fmtName} barcode detected — processing...`);
+
+    sendToServer(rawText, fmtName);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// SEND TO DJANGO BACKEND
+// ════════════════════════════════════════════════════════════
+async function sendToServer(text, format) {
+    try {
+        const resp = await fetch('/access/api/scan/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: JSON.stringify({
+                scanned_text:   text,
+                barcode_format: format || 'unknown',
+                selected_room:  selectedRoom,
+            })
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const data = await resp.json();
+        renderResult(data);
+
+    } catch (err) {
+        console.error('Server error:', err);
+        playSound('error');
+        setStatus('denied', `❌ Server error: ${err.message}`);
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// RENDER RESULT
+// ════════════════════════════════════════════════════════════
+function renderResult(data) {
+    const now     = new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    const sound   = data.sound || 'scanned';
+
+    playSound(sound);
+
+    resultContainer.classList.add('visible');
+    rcTime.textContent = now;
+
+    if (data.status === 'granted') {
+        // ── Access Granted ──────────────────────────────
+        flashScreen('green');
+        setStatus('success', `✅ ${data.message}`);
+
+        rcHeader.className = 'rc-header granted';
+        rcDot.className    = 'rc-dot granted';
+        rcTitle.textContent = '✅ ACCESS GRANTED';
+
+        let html = '';
+
+        if (data.zone) {
+            html += dataRow('Zone',       `${data.zone.icon} ${data.zone.name}`);
+            html += dataRow('Type',        data.zone.type);
+            html += dataRow('Floor',       `Floor ${data.zone.floor}`);
+            html += dataRow('Room No.',    data.zone.room || 'N/A');
+        }
+
+        html += dataRow('Barcode Data',  data.scanned_data, 'mono');
+        html += dataRow('Format',        data.barcode_format || 'N/A');
+        html += dataRow('Timestamp',     data.timestamp || now);
+
+        if (data.access_type === 'personal_badge') {
+            html += dataRow('Access Type', '🪪 Personal Staff Badge');
+        }
+
+        if (data.user) {
+            html += `<div class="user-block">
+                <div class="user-avatar ua-green">${data.user.initials || '??'}</div>
+                <div class="user-block-info">
+                    <div class="ub-name">${data.user.name}</div>
+                    <div class="ub-role">${data.user.role} · ${data.user.email || ''}</div>
+                </div>
+            </div>`;
+        }
+
+        rcBody.innerHTML = html;
+
+    } else if (data.status === 'denied') {
+        // ── Access Denied ───────────────────────────────
+        flashScreen('red');
+        setStatus('denied', `❌ ${data.reason}`);
+
+        rcHeader.className = 'rc-header denied';
+        rcDot.className    = 'rc-dot denied';
+        rcTitle.textContent = '❌ ACCESS DENIED';
+
+        rcBody.innerHTML =
+            dataRow('Reason',      data.reason, 'red') +
+            dataRow('Barcode',     data.scanned_data, 'mono') +
+            dataRow('Timestamp',   now);
+
+    } else if (data.status === 'unknown') {
+        // ── Unknown barcode — show the data anyway ──────
+        flashScreen('amber');
+        setStatus('captured', `📊 Barcode read — not an access code`);
+
+        rcHeader.className = 'rc-header captured';
+        rcDot.className    = 'rc-dot captured';
+        rcTitle.textContent = '📊 DATA CAPTURED';
+
+        let html = '';
+        if (data.data_display) {
+            for (const [k, v] of Object.entries(data.data_display)) {
+                const isMono = k.toLowerCase().includes('text') || k.toLowerCase().includes('raw');
+                html += dataRow(k, v, isMono ? 'mono' : '');
+            }
+        }
+
+        rcBody.innerHTML = html;
+
+    } else {
+        setStatus('warning', `⚠ ${data.message || 'Unknown response'}`);
+    }
+
+    // Auto-dismiss after 12 seconds
+    setTimeout(() => {
+        resultContainer.classList.remove('visible');
+        setStatus('scanning', isActive ? '🔍 Ready for next scan...' : 'Press "Start Scanner"');
+    }, 12000);
+}
+
+
+// ════════════════════════════════════════════════════════════
+// MANUAL SUBMIT
+// ════════════════════════════════════════════════════════════
+function submitManual() {
+    const input = document.getElementById('manualInput');
+    const text  = (input.value || '').trim();
+
+    if (!text) {
+        input.focus();
+        input.style.borderColor = 'var(--red)';
+        setTimeout(() => input.style.borderColor = '', 1500);
+        return;
+    }
+
+    setStatus('captured', '⚡ Processing manual entry...');
+    sendToServer(text, 'MANUAL_ENTRY');
+    input.value = '';
+}
+
+document.getElementById('manualInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') submitManual();
+});
+
+
+// ════════════════════════════════════════════════════════════
+// ROOM SELECTION
+// ════════════════════════════════════════════════════════════
+function selectRoom(el) {
+    document.querySelectorAll('.room-item').forEach(r => r.classList.remove('active'));
+    el.classList.add('active');
+    selectedRoom = el.dataset.room;
+    document.getElementById('selectedRoomLabel').textContent = selectedRoom;
+}
+
+
+// ════════════════════════════════════════════════════════════
+// BARCODE FORMAT NAME LOOKUP
+// ════════════════════════════════════════════════════════════
+function getBarcodeFormatName(format) {
+    const names = {
+        0: 'AZTEC',
+        1: 'CODABAR',
+        2: 'CODE_39',
+        3: 'CODE_93',
+        4: 'CODE_128',
+        5: 'DATA_MATRIX',
+        6: 'EAN_8',
+        7: 'EAN_13',
+        8: 'ITF',
+        9: 'MAXICODE',
+        10: 'PDF_417',
+        11: 'QR_CODE',
+        12: 'RSS_14',
+        13: 'RSS_EXPANDED',
+        14: 'UPC_A',
+        15: 'UPC_E',
+        16: 'UPC_EAN_EXTENSION',
+    };
+    return names[format] || `FORMAT_${format}`;
+}
+
+
+// ════════════════════════════════════════════════════════════
+// SOUNDS — Generated via Web Audio API (no files needed)
+// ════════════════════════════════════════════════════════════
+function playSound(type) {
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+
+        if (type === 'granted') {
+            // Happy 3-tone chime
+            [523.25, 659.25, 783.99].forEach((freq, i) => {
+                const o = ac.createOscillator();
+                const g = ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.frequency.value = freq;
+                o.type = 'sine';
+                const t = ac.currentTime + i * 0.12;
+                g.gain.setValueAtTime(0, t);
+                g.gain.linearRampToValueAtTime(0.35, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+                o.start(t); o.stop(t + 0.4);
+            });
+
+        } else if (type === 'denied') {
+            // Double low buzz
+            [0, 0.2].forEach(delay => {
+                const o = ac.createOscillator();
+                const g = ac.createGain();
+                o.connect(g); g.connect(ac.destination);
+                o.frequency.value = 180;
+                o.type = 'square';
+                const t = ac.currentTime + delay;
+                g.gain.setValueAtTime(0.3, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+                o.start(t); o.stop(t + 0.2);
+            });
+
+        } else if (type === 'scanned') {
+            // Single clean beep (barcode read — processing)
+            const o = ac.createOscillator();
+            const g = ac.createGain();
+            o.connect(g); g.connect(ac.destination);
+            o.frequency.value = 880;
+            o.type = 'sine';
+            g.gain.setValueAtTime(0.25, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+            o.start(); o.stop(ac.currentTime + 0.15);
+
+        } else if (type === 'error') {
+            // Descending warning
+            const o = ac.createOscillator();
+            const g = ac.createGain();
+            o.connect(g); g.connect(ac.destination);
+            o.frequency.setValueAtTime(400, ac.currentTime);
+            o.frequency.exponentialRampToValueAtTime(100, ac.currentTime + 0.4);
+            o.type = 'sawtooth';
+            g.gain.setValueAtTime(0.2, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.45);
+            o.start(); o.stop(ac.currentTime + 0.45);
+        }
+
+    } catch(e) {
+        // Audio context blocked — silently skip
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════════════════
+function setStatus(type, msg, loading=false) {
+    statusBar.className = `status-bar ${type}`;
+
+    if (loading) {
+        statusTxt.innerHTML = `<span class="spinner"></span> Connecting to camera...`;
+        return;
+    }
+
+    statusTxt.textContent = msg || '';
+}
+
+function dataRow(key, value, cls='') {
+    return `<div class="data-row">
+        <span class="dr-key">${key}</span>
+        <span class="dr-val ${cls}">${value}</span>
+    </div>`;
+}
+
+function flashScreen(color) {
+    const el = document.getElementById('flashOverlay');
+    const bg = color === 'green' ? 'rgba(16,185,129,0.12)'
+             : color === 'red'   ? 'rgba(239,68,68,0.12)'
+             :                     'rgba(245,158,11,0.12)';
+    el.style.background = bg;
+    el.style.opacity    = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 400);
+}
+
+function getCookie(name) {
+    const v = `; ${document.cookie}`;
+    const p = v.split(`; ${name}=`);
+    if (p.length === 2) return p.pop().split(';').shift();
+    return '';
+}
+</script>
+
+</body>
+</html>

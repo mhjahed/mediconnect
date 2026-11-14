@@ -1,0 +1,372 @@
+<!-- templates/medical_records/prescription_print.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Prescription – {{ record.patient.get_full_name }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family:'Inter',sans-serif;
+            background:white;
+            color:#1E293B;
+            padding:0;
+        }
+
+        @media print {
+            body { padding: 0; }
+            .no-print { display:none !important; }
+            .page-break { page-break-after: always; }
+        }
+
+        /* Print button */
+        .print-bar {
+            background:#1E293B; padding:12px 5%;
+            display:flex; align-items:center; justify-content:space-between;
+        }
+
+        .print-bar span { color:rgba(255,255,255,0.7); font-size:13px; }
+
+        .print-btn {
+            display:flex; align-items:center; gap:8px;
+            background:#2563EB; color:white; border:none;
+            border-radius:8px; padding:10px 20px;
+            font-size:13px; font-weight:700; cursor:pointer;
+            font-family:'Inter',sans-serif;
+        }
+
+        /* Prescription page */
+        .prescription-page {
+            max-width:794px;
+            margin:24px auto;
+            background:white;
+            border:1px solid #E2E8F0;
+            border-radius:4px;
+            overflow:hidden;
+        }
+
+        /* Header */
+        .rx-header {
+            background:linear-gradient(135deg,#1E3A8A,#2563EB);
+            padding:28px 36px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+        }
+
+        .hospital-name {
+            font-size:24px; font-weight:900;
+            color:white; letter-spacing:-0.5px;
+        }
+
+        .hospital-name span { color:#93C5FD; }
+        .hospital-tag { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
+
+        .rx-symbol {
+            font-size:64px; font-weight:900;
+            color:rgba(255,255,255,0.15);
+            font-style:italic;
+            line-height:1;
+        }
+
+        /* Doctor info */
+        .doctor-section {
+            background:#EFF6FF;
+            padding:18px 36px;
+            border-bottom:2px solid #BFDBFE;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .doc-name { font-size:18px; font-weight:800; color:#1E293B; }
+        .doc-specialty { font-size:13px; color:#2563EB; font-weight:600; margin-top:2px; }
+        .doc-license { font-size:11px; color:#64748B; margin-top:1px; }
+
+        .rx-date { text-align:right; }
+        .rx-date .label { font-size:11px; color:#64748B; text-transform:uppercase; letter-spacing:1px; }
+        .rx-date .value { font-size:14px; font-weight:700; color:#1E293B; margin-top:2px; }
+
+        /* Patient info */
+        .patient-section {
+            padding:16px 36px;
+            border-bottom:1px solid #E2E8F0;
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:16px;
+            background:#FAFAFA;
+        }
+
+        .patient-field { }
+        .pf-label { font-size:10px; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+        .pf-value { font-size:13px; font-weight:700; color:#1E293B; margin-top:3px; }
+
+        /* Vitals bar */
+        .vitals-bar {
+            background:#F8FAFC;
+            border-bottom:1px solid #E2E8F0;
+            padding:12px 36px;
+            display:flex;
+            gap:24px;
+            flex-wrap:wrap;
+        }
+
+        .vital-item { }
+        .vi-label { font-size:10px; color:#94A3B8; text-transform:uppercase; letter-spacing:1px; }
+        .vi-value { font-size:13px; font-weight:700; color:#1E293B; margin-top:1px; }
+
+        /* Diagnosis */
+        .diagnosis-section {
+            padding:18px 36px;
+            border-bottom:1px solid #E2E8F0;
+        }
+
+        .section-label {
+            font-size:11px; font-weight:700; color:#2563EB;
+            text-transform:uppercase; letter-spacing:2px;
+            margin-bottom:8px;
+        }
+
+        .diagnosis-text {
+            font-size:14px; color:#1E293B; font-weight:600;
+            line-height:1.6;
+        }
+
+        /* Prescriptions */
+        .medications-section { padding:18px 36px; border-bottom:1px solid #E2E8F0; }
+
+        .med-table { width:100%; border-collapse:collapse; margin-top:8px; }
+
+        .med-table th {
+            background:#1E293B; color:white;
+            font-size:11px; font-weight:700;
+            text-transform:uppercase; letter-spacing:0.5px;
+            padding:10px 14px; text-align:left;
+        }
+
+        .med-table td { padding:10px 14px; font-size:13px; border-bottom:1px solid #F1F5F9; }
+        .med-table tr:last-child td { border-bottom:none; }
+        .med-table tr:nth-child(even) td { background:#F8FAFC; }
+
+        .drug-name { font-weight:700; color:#1E293B; }
+        .drug-generic { font-size:11px; color:#64748B; margin-top:1px; }
+
+        /* Lab tests */
+        .labs-section { padding:18px 36px; border-bottom:1px solid #E2E8F0; }
+
+        .lab-list { list-style:none; margin-top:8px; }
+        .lab-list li {
+            display:flex; align-items:center; gap:10px;
+            padding:8px 0; border-bottom:1px dashed #E2E8F0;
+            font-size:13px;
+        }
+
+        .lab-list li:last-child { border-bottom:none; }
+        .lab-num { width:22px; height:22px; background:#2563EB; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+        .lab-urgency { background:#FEF2F2; color:#EF4444; font-size:10px; font-weight:700; padding:2px 7px; border-radius:100px; }
+        .lab-urgency.routine { background:#ECFDF5; color:#10B981; }
+
+        /* Follow up */
+        .followup-section { padding:16px 36px; border-bottom:1px solid #E2E8F0; }
+
+        .followup-text { font-size:13px; color:#1E293B; line-height:1.6; background:#FFFBEB; padding:12px 16px; border-radius:8px; border-left:3px solid #F59E0B; }
+
+        /* Footer */
+        .rx-footer {
+            padding:20px 36px;
+            display:flex;
+            justify-content:space-between;
+            align-items:flex-end;
+        }
+
+        .ref-number { font-size:11px; color:#94A3B8; }
+        .ref-number strong { color:#1E293B; font-family:monospace; }
+
+        .signature-line {
+            text-align:center;
+        }
+
+        .sig-line { border-top:2px solid #1E293B; width:180px; margin:0 auto 6px; }
+        .sig-label { font-size:11px; color:#64748B; }
+        .sig-name  { font-size:13px; font-weight:700; color:#1E293B; }
+    </style>
+</head>
+<body>
+
+<!-- Print bar (hidden when printing) -->
+<div class="print-bar no-print">
+    <span>📄 Prescription — {{ record.patient.get_full_name }} | {{ record.created_at|date:"F d, Y" }}</span>
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+</div>
+
+<div class="prescription-page">
+
+    <!-- Header -->
+    <div class="rx-header">
+        <div>
+            <div class="hospital-name">Medi<span>Connect</span></div>
+            <div class="hospital-tag">Digital Healthcare Platform — Official Prescription</div>
+        </div>
+        <div class="rx-symbol">Rx</div>
+    </div>
+
+    <!-- Doctor -->
+    <div class="doctor-section">
+        <div>
+            <div class="doc-name">Dr. {{ record.doctor.get_full_name }}</div>
+            {% if record.doctor.doctor_profile %}
+            <div class="doc-specialty">{{ record.doctor.doctor_profile.get_specialty_display }}</div>
+            <div class="doc-license">Reg. No: {{ record.doctor.doctor_profile.license_number }}</div>
+            {% endif %}
+        </div>
+        <div class="rx-date">
+            <div class="label">Date</div>
+            <div class="value">{{ record.created_at|date:"F d, Y" }}</div>
+        </div>
+    </div>
+
+        <!-- Patient section — FIXED -->
+    <div class="patient-section">
+        <div class="patient-field">
+            <div class="pf-label">Patient Name</div>
+            <div class="pf-value">{{ record.patient.get_full_name }}</div>
+        </div>
+        <div class="patient-field">
+            <div class="pf-label">Age / Gender</div>
+            <div class="pf-value">
+                {% if patient_age %}{{ patient_age }} yrs{% else %}N/A{% endif %}
+                / {{ patient_gender }}
+            </div>
+        </div>
+        <div class="patient-field">
+            <div class="pf-label">Contact</div>
+            <div class="pf-value">{{ record.patient.phone_number|default:"—" }}</div>
+        </div>
+        <div class="patient-field">
+            <div class="pf-label">Ref. No</div>
+            <div class="pf-value" style="font-family:monospace;">
+                #{{ record.id|stringformat:"s"|slice:":8"|upper }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Vitals -->
+    {% if record.blood_pressure or record.pulse_rate or record.temperature or record.weight %}
+    <div class="vitals-bar">
+        {% if record.blood_pressure %}
+        <div class="vital-item"><div class="vi-label">Blood Pressure</div><div class="vi-value">{{ record.blood_pressure }}</div></div>
+        {% endif %}
+        {% if record.pulse_rate %}
+        <div class="vital-item"><div class="vi-label">Pulse</div><div class="vi-value">{{ record.pulse_rate }}</div></div>
+        {% endif %}
+        {% if record.temperature %}
+        <div class="vital-item"><div class="vi-label">Temperature</div><div class="vi-value">{{ record.temperature }}</div></div>
+        {% endif %}
+        {% if record.weight %}
+        <div class="vital-item"><div class="vi-label">Weight</div><div class="vi-value">{{ record.weight }}</div></div>
+        {% endif %}
+        {% if record.oxygen_saturation %}
+        <div class="vital-item"><div class="vi-label">SpO₂</div><div class="vi-value">{{ record.oxygen_saturation }}</div></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Diagnosis -->
+    <div class="diagnosis-section">
+        <div class="section-label">Diagnosis</div>
+        <div class="diagnosis-text">{{ record.diagnosis }}</div>
+    </div>
+
+    <!-- Prescriptions -->
+    {% if prescriptions %}
+    <div class="medications-section">
+        <div class="section-label">Prescribed Medications</div>
+        <table class="med-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Medication</th>
+                    <th>Dosage</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Route</th>
+                    <th>Instructions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rx in prescriptions %}
+                <tr>
+                    <td style="font-weight:800; color:#2563EB;">{{ forloop.counter }}</td>
+                    <td>
+                        <div class="drug-name">{{ rx.drug_name }}</div>
+                        {% if rx.generic_name %}
+                        <div class="drug-generic">{{ rx.generic_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ rx.dosage }}</td>
+                    <td>{{ rx.get_frequency_display }}</td>
+                    <td>{{ rx.get_duration_display_str }}</td>
+                    <td>{{ rx.get_route_display }}</td>
+                    <td>{{ rx.instructions|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <!-- Lab tests -->
+    {% if lab_tests %}
+    <div class="labs-section">
+        <div class="section-label">Investigations Ordered</div>
+        <ul class="lab-list">
+            {% for test in lab_tests %}
+            <li>
+                <div class="lab-num">{{ forloop.counter }}</div>
+                <span style="font-weight:600; flex:1;">{{ test.test_name }}</span>
+                <span class="lab-urgency {% if test.urgency == 'ROUTINE' %}routine{% endif %}">
+                    {{ test.get_urgency_display }}
+                </span>
+                {% if test.instructions %}
+                <span style="font-size:11px; color:#64748B;">{{ test.instructions }}</span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Follow-up -->
+    {% if record.follow_up_notes %}
+    <div class="followup-section">
+        <div class="section-label">Follow-up Instructions</div>
+        <div class="followup-text">{{ record.follow_up_notes }}</div>
+    </div>
+    {% endif %}
+
+    <!-- Footer + Signature -->
+    <div class="rx-footer">
+        <div class="ref-number">
+            Reference: <strong>#{{ record.id|stringformat:"s"|slice:":8"|upper }}</strong><br/>
+            Generated: {{ record.created_at|date:"F d, Y g:i A" }}<br/>
+            Platform: MediConnect Digital Health
+        </div>
+        <div class="signature-line">
+            <div class="sig-line"></div>
+            <div class="sig-name">Dr. {{ record.doctor.get_full_name }}</div>
+            <div class="sig-label">
+                {% if record.doctor.doctor_profile %}
+                {{ record.doctor.doctor_profile.get_specialty_display }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

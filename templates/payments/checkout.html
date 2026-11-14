@@ -1,0 +1,662 @@
+<!-- templates/payments/checkout.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Payment – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:   #2563EB;
+            --dark:   #1E293B;
+            --green:  #10B981;
+            --amber:  #F59E0B;
+            --red:    #EF4444;
+            --light:  #F8FAFC;
+            --slate:  #64748B;
+            --border: #E2E8F0;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #F0F9FF 100%);
+            min-height: 100vh;
+            padding: 32px 16px;
+        }
+
+        .page-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* ── Back nav ── */
+        .back-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--slate);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 24px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .back-nav:hover { color: var(--blue); border-color: var(--blue); }
+
+        /* ── Page header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1E3A8A, #2563EB);
+            border-radius: 20px;
+            padding: 32px 36px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 160px; height: 160px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+
+        .header-left { position: relative; z-index: 1; }
+        .header-left h1 { font-size: 24px; font-weight: 900; color: white; margin-bottom: 4px; }
+        .header-left p  { font-size: 14px; color: rgba(255,255,255,0.65); }
+
+        .header-amount {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            padding: 16px 24px;
+            text-align: center;
+            position: relative; z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .amount-label { font-size: 11px; color: rgba(255,255,255,0.6); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .amount-value { font-size: 28px; font-weight: 900; color: white; letter-spacing: -1px; margin-top: 4px; }
+        .amount-currency { font-size: 14px; color: rgba(255,255,255,0.7); }
+
+        /* ── Grid ── */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* ── Appointment card ── */
+        .appt-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            height: fit-content;
+        }
+
+        .card-header-strip {
+            background: linear-gradient(90deg, var(--dark), #334155);
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header-strip h3 { font-size: 14px; font-weight: 700; color: white; }
+        .card-header-strip i  { font-size: 18px; color: #94A3B8; }
+
+        .appt-rows { padding: 0; }
+
+        .appt-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #F8FAFC;
+            font-size: 13px;
+        }
+
+        .appt-row:last-child { border-bottom: none; }
+        .appt-row:nth-child(even) { background: #FAFAFA; }
+        .row-label { color: var(--slate); }
+        .row-value { font-weight: 600; color: var(--dark); text-align: right; }
+        .row-value.green { color: var(--green); font-size: 15px; }
+
+        /* ── Method selector ── */
+        .method-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Tabs */
+        .method-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: var(--light);
+        }
+
+        .method-tab {
+            flex: 1;
+            padding: 14px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--slate);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .method-tab:hover   { color: var(--blue); background: white; }
+        .method-tab.active  { color: var(--blue); background: white; border-bottom-color: var(--blue); }
+
+        .tab-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+        /* Tab panels */
+        .tab-panel { display: none; padding: 24px; }
+        .tab-panel.active { display: block; }
+
+        /* Our payment info box */
+        .payment-info-box {
+            background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+            border: 1px solid #A7F3D0;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #065F46;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(167,243,208,0.4);
+        }
+
+        .info-row:last-child { border-bottom: none; }
+        .info-key   { color: #065F46; font-weight: 500; }
+        .info-val   { font-weight: 700; color: #064E3B; font-family: 'Courier New', monospace; letter-spacing: 0.5px; }
+
+        /* Form fields */
+        .form-group  { margin-bottom: 16px; }
+        .form-label  {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: var(--dark);
+            outline: none;
+            transition: all 0.2s;
+            background: var(--light);
+        }
+
+        .form-input:focus { border-color: var(--blue); background: white; box-shadow: 0 0 0 4px rgba(37,99,235,0.06); }
+
+        .form-input.mono { font-family: 'Courier New', monospace; letter-spacing: 1px; text-transform: uppercase; }
+
+        textarea.form-input { resize: vertical; min-height: 80px; }
+
+        /* Mobile method selector */
+        .mobile-method-grid {
+            display: grid;
+            grid-template-columns: repeat(2,1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mobile-method-btn {
+            padding: 14px 10px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .mobile-method-btn:hover { border-color: var(--blue); }
+        .mobile-method-btn.selected { border-color: var(--blue); background: #EFF6FF; }
+        .mobile-method-btn .mb-icon { font-size: 28px; margin-bottom: 6px; display: block; }
+        .mobile-method-btn .mb-name { font-size: 13px; font-weight: 700; color: var(--dark); }
+
+        /* bKash specific color */
+        .mobile-method-btn[data-method="BKASH"].selected  { border-color: #E2136E; background: #FFF0F7; }
+        .mobile-method-btn[data-method="NAGAD"].selected  { border-color: #F05A28; background: #FFF4F0; }
+        .mobile-method-btn[data-method="ROCKET"].selected { border-color: #8C3494; background: #F8F0FF; }
+        .mobile-method-btn[data-method="UPAY"].selected   { border-color: #4CAF50; background: #F0FFF4; }
+
+        /* Submit button */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--blue), #1D4ED8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(37,99,235,0.3);
+            margin-top: 8px;
+        }
+
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(37,99,235,0.4); }
+
+        /* Note */
+        .submit-note {
+            font-size: 12px;
+            color: var(--slate);
+            text-align: center;
+            margin-top: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .content-grid { grid-template-columns: 1fr; }
+            .page-header  { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+    <!-- Back -->
+    <a href="{% url 'appointments:doctor_profile' appointment.doctor.id %}" class="back-nav">
+        <i class='bx bx-arrow-back'></i> Back
+    </a>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-left">
+            <h1>💳 Complete Your Payment</h1>
+            <p>
+                Dr. {{ appointment.doctor.get_full_name }} ·
+                {{ appointment.appointment_date|date:"F d, Y" }} ·
+                {{ appointment.start_time|time:"g:i A" }}
+            </p>
+        </div>
+        <div class="header-amount">
+            <div class="amount-label">Amount Due</div>
+            <div class="amount-value">৳{{ appointment.amount }}</div>
+            <div class="amount-currency">Bangladeshi Taka</div>
+        </div>
+    </div>
+
+    <div class="content-grid">
+
+        <!-- LEFT: Appointment Summary -->
+        <div class="appt-card">
+            <div class="card-header-strip">
+                <i class='bx bx-receipt'></i>
+                <h3>Appointment Summary</h3>
+            </div>
+            <div class="appt-rows">
+                <div class="appt-row">
+                    <span class="row-label">Doctor</span>
+                    <span class="row-value">Dr. {{ appointment.doctor.get_full_name }}</span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Specialty</span>
+                    <span class="row-value">{{ specialty }}</span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Date</span>
+                    <span class="row-value">{{ appointment.appointment_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Time</span>
+                    <span class="row-value">{{ appointment.start_time|time:"g:i A" }} – {{ appointment.end_time|time:"g:i A" }}</span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Patient</span>
+                    <span class="row-value">{{ appointment.patient.get_full_name }}</span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Reference</span>
+                    <span class="row-value" style="font-family:monospace; font-size:12px;">
+                        #{{ appointment.id|stringformat:"s"|slice:":8"|upper }}
+                    </span>
+                </div>
+                <div class="appt-row">
+                    <span class="row-label">Total</span>
+                    <span class="row-value green">৳{{ appointment.amount }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Payment Method -->
+        <div class="method-card">
+
+            <!-- Tabs -->
+            <div class="method-tabs">
+                <button class="method-tab active" onclick="switchTab('mobile')">
+                    <span class="tab-icon">📱</span>
+                    Mobile Banking
+                </button>
+                <button class="method-tab" onclick="switchTab('bank')">
+                    <span class="tab-icon">🏦</span>
+                    Bank Transfer
+                </button>
+                <button class="method-tab" onclick="switchTab('other')">
+                    <span class="tab-icon">💳</span>
+                    Other
+                </button>
+            </div>
+
+            <!-- ── TAB 1: Mobile Banking ── -->
+            <div class="tab-panel active" id="panel-mobile">
+
+                <!-- Select mobile method -->
+                <div class="mobile-method-grid" id="mobileMethodGrid">
+                    <button type="button" class="mobile-method-btn selected"
+                            data-method="BKASH" onclick="selectMobileMethod(this)">
+                        <span class="mb-icon">💗</span>
+                        <span class="mb-name">bKash</span>
+                    </button>
+                    <button type="button" class="mobile-method-btn"
+                            data-method="NAGAD" onclick="selectMobileMethod(this)">
+                        <span class="mb-icon">🔶</span>
+                        <span class="mb-name">Nagad</span>
+                    </button>
+                    <button type="button" class="mobile-method-btn"
+                            data-method="ROCKET" onclick="selectMobileMethod(this)">
+                        <span class="mb-icon">🟣</span>
+                        <span class="mb-name">Rocket</span>
+                    </button>
+                    <button type="button" class="mobile-method-btn"
+                            data-method="UPAY" onclick="selectMobileMethod(this)">
+                        <span class="mb-icon">🟢</span>
+                        <span class="mb-name">Upay</span>
+                    </button>
+                </div>
+
+                <!-- Our number to send to -->
+                <div class="payment-info-box">
+                    <div class="info-box-title">
+                        📲 Send Payment To
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">bKash Number</span>
+                        <span class="info-val">{{ payment_info.bkash_number }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Nagad Number</span>
+                        <span class="info-val">{{ payment_info.nagad_number }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Rocket Number</span>
+                        <span class="info-val">{{ payment_info.rocket_number }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Amount</span>
+                        <span class="info-val">৳{{ appointment.amount }}</span>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form method="POST"
+                      action="{% url 'payments:submit_mobile' appointment.id %}"
+                      id="mobileForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="mobile_method" id="selectedMobileMethod" value="BKASH"/>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Number (Sender)</label>
+                        <input type="tel" name="mobile_sender_number" class="form-input"
+                               placeholder="01XXXXXXXXX" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Transaction ID</label>
+                        <input type="text" name="mobile_transaction_id"
+                               class="form-input mono"
+                               placeholder="e.g. 8N7A3D2X1K"
+                               required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Recipient Number (Ours)</label>
+                        <input type="tel" name="mobile_number" class="form-input"
+                               placeholder="The number you sent to" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea name="payment_notes" class="form-input"
+                                  placeholder="Any additional info..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        <i class='bx bx-check-circle'></i>
+                        Submit Payment Info
+                    </button>
+
+                    <p class="submit-note">
+                        ⏳ Your payment will be verified by our team within <strong>1–3 hours</strong>.<br/>
+                        You'll receive an email confirmation once verified.
+                    </p>
+                </form>
+            </div>
+
+            <!-- ── TAB 2: Bank Transfer ── -->
+            <div class="tab-panel" id="panel-bank">
+
+                <!-- Our bank details -->
+                <div class="payment-info-box">
+                    <div class="info-box-title">
+                        🏦 Transfer To This Account
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Bank Name</span>
+                        <span class="info-val">{{ payment_info.bank_name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Account Holder</span>
+                        <span class="info-val">{{ payment_info.bank_holder }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Account Number</span>
+                        <span class="info-val">{{ payment_info.bank_account }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Branch</span>
+                        <span class="info-val">{{ payment_info.bank_branch }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Routing No.</span>
+                        <span class="info-val">{{ payment_info.bank_routing }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-key">Amount</span>
+                        <span class="info-val">৳{{ appointment.amount }}</span>
+                    </div>
+                </div>
+
+                <form method="POST"
+                      action="{% url 'payments:submit_bank' appointment.id %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label class="form-label">Your Bank Name</label>
+                        <input type="text" name="bank_name" class="form-input"
+                               placeholder="e.g. Dutch-Bangla Bank, BRAC Bank..." required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Account Holder Name</label>
+                        <input type="text" name="bank_account_holder" class="form-input"
+                               placeholder="Full name on the account" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Your Account Number</label>
+                        <input type="text" name="bank_account_number"
+                               class="form-input mono"
+                               placeholder="Your account number" required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Transaction / Reference ID</label>
+                        <input type="text" name="bank_transaction_id"
+                               class="form-input mono"
+                               placeholder="From your bank transfer receipt"
+                               required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Branch (Optional)</label>
+                        <input type="text" name="bank_branch" class="form-input"
+                               placeholder="Your branch name"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea name="payment_notes" class="form-input"
+                                  placeholder="Additional transfer details..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#059669,#047857); box-shadow:0 6px 20px rgba(5,150,105,0.3);">
+                        <i class='bx bx-transfer'></i>
+                        Submit Bank Transfer Info
+                    </button>
+
+                    <p class="submit-note">
+                        ⏳ Bank transfers are verified within <strong>3–6 hours</strong> on working days.
+                    </p>
+                </form>
+            </div>
+
+            <!-- ── TAB 3: Other Payment ── -->
+            <div class="tab-panel" id="panel-other">
+
+                <div class="payment-info-box" style="background:linear-gradient(135deg,#FFFBEB,#FEF3C7); border-color:#FDE68A;">
+                    <div class="info-box-title" style="color:#92400E;">
+                        💳 Other Payment Methods
+                    </div>
+                    <p style="font-size:13px; color:#78350F; line-height:1.6;">
+                        If you paid via <strong>Cash, Cheque, Western Union</strong> or any other method,
+                        please describe your payment below. Our team will verify and confirm.
+                    </p>
+                </div>
+
+                <form method="POST"
+                      action="{% url 'payments:submit_other' appointment.id %}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <label class="form-label">Payment Method Used</label>
+                        <input type="text" name="other_method_name" class="form-input"
+                               placeholder="e.g. Cash, Cheque, Western Union, MoneyGram..."
+                               required/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Reference / Receipt Number</label>
+                        <input type="text" name="other_reference" class="form-input mono"
+                               placeholder="Receipt or reference number"/>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Payment Details</label>
+                        <textarea name="payment_notes" class="form-input"
+                                  rows="4"
+                                  placeholder="Describe your payment: date, amount, method, any reference..."
+                                  required></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" style="background:linear-gradient(135deg,#D97706,#B45309); box-shadow:0 6px 20px rgba(217,119,6,0.3);">
+                        <i class='bx bx-send'></i>
+                        Submit Payment Details
+                    </button>
+
+                    <p class="submit-note">
+                        Our admin team will review your payment and confirm within <strong>24 hours</strong>.
+                    </p>
+                </form>
+            </div>
+
+        </div><!-- /method-card -->
+
+    </div><!-- /content-grid -->
+</div><!-- /page-wrapper -->
+
+<script>
+    // ── Tab switcher ─────────────────────────────────────
+    function switchTab(tab) {
+        document.querySelectorAll('.method-tab').forEach((t, i) => {
+            const panels = ['mobile', 'bank', 'other'];
+            t.classList.toggle('active', panels[i] === tab);
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(`panel-${tab}`).classList.add('active');
+    }
+
+    // ── Mobile method selector ────────────────────────────
+    function selectMobileMethod(btn) {
+        document.querySelectorAll('.mobile-method-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        document.getElementById('selectedMobileMethod').value = btn.dataset.method;
+
+        // Update placeholder for transaction ID
+        const labels = { BKASH:'bKash TrxID', NAGAD:'Nagad TrxID', ROCKET:'Rocket TxnID', UPAY:'Upay TxnID' };
+        const input  = document.querySelector('#mobileForm input[name="mobile_transaction_id"]');
+        if (input) input.placeholder = labels[btn.dataset.method] || 'Transaction ID';
+    }
+</script>
+
+</body>
+</html>

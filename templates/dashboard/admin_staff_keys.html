@@ -1,0 +1,177 @@
+<!-- templates/dashboard/admin_staff_keys.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Staff Access Keys – MediConnect Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --red:#EF4444; --amber:#F59E0B; --purple:#7C3AED; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:1100px; margin:0 auto; padding:32px 20px; }
+        .page-title { font-size:26px; font-weight:800; margin-bottom:4px; }
+        .page-sub { font-size:14px; color:var(--slate); margin-bottom:28px; }
+
+        .generate-card { background:white; border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:28px; }
+        .gen-header { background:linear-gradient(135deg,#5B21B6,#7C3AED); padding:20px 28px; display:flex; align-items:center; gap:12px; }
+        .gen-header i { font-size:24px; color:#DDD6FE; }
+        .gen-header h2 { font-size:16px; font-weight:800; color:white; }
+        .gen-header p { font-size:12px; color:rgba(255,255,255,0.5); margin-top:2px; }
+        .gen-body { padding:24px 28px; }
+
+        .gen-form { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:14px; align-items:end; }
+        .form-group { display:flex; flex-direction:column; }
+        .form-label { font-size:12px; font-weight:700; color:var(--slate); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:7px; }
+        .form-input { padding:11px 14px; border:2px solid var(--border); border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; color:var(--dark); background:var(--light); outline:none; transition:all 0.2s; }
+        .form-input:focus { border-color:var(--purple); background:white; }
+        .form-input.full { grid-column:1/-1; }
+
+        .gen-btn { padding:12px 24px; background:linear-gradient(135deg,var(--purple),#5B21B6); color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 16px rgba(124,58,237,0.3); white-space:nowrap; font-family:'Inter',sans-serif; }
+
+        .keys-table { width:100%; background:white; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+        .keys-table table { width:100%; border-collapse:collapse; }
+        .keys-table th { background:var(--dark); color:white; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; padding:14px 16px; text-align:left; }
+        .keys-table td { padding:13px 16px; font-size:13px; border-bottom:1px solid var(--border); }
+        .keys-table tr:last-child td { border-bottom:none; }
+        .keys-table tr:nth-child(even) td { background:#FAFAFA; }
+
+        .key-code { font-family:'Courier New',monospace; font-size:13px; font-weight:700; color:var(--purple); letter-spacing:1px; }
+
+        .status-badge { padding:4px 10px; border-radius:100px; font-size:11px; font-weight:700; display:inline-block; }
+        .status-ACTIVE { background:#ECFDF5; color:var(--green); }
+        .status-USED { background:#EFF6FF; color:var(--blue); }
+        .status-REVOKED { background:#F1F5F9; color:var(--slate); }
+        .status-EXPIRED { background:#FEF2F2; color:var(--red); }
+
+        .revoke-btn { font-size:11px; color:var(--red); font-weight:600; text-decoration:none; padding:4px 10px; border:1px solid #FECACA; border-radius:6px; }
+        .copy-btn { font-size:11px; color:var(--blue); font-weight:600; background:none; border:1px solid #BFDBFE; border-radius:6px; padding:4px 10px; cursor:pointer; font-family:'Inter',sans-serif; }
+
+        @media(max-width:900px) { .gen-form { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back"><i class='bx bx-arrow-back'></i> Admin Panel</a>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">🔑 Staff Access Keys</h1>
+    <p class="page-sub">Generate keys for Nurses, Ward Boys, IT, HR & other hospital staff</p>
+
+    {% if messages %}{% for msg in messages %}
+    <div style="background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:10px;padding:14px 18px;margin-bottom:20px;font-size:13px;font-weight:600;">{{ msg }}</div>
+    {% endfor %}{% endif %}
+
+    <div class="generate-card">
+        <div class="gen-header">
+            <i class='bx bx-key'></i>
+            <div>
+                <h2>Generate Staff Access Key</h2>
+                <p>One-time-use key for staff registration</p>
+            </div>
+        </div>
+        <div class="gen-body">
+            <form method="POST" action="{% url 'dashboard:generate_staff_key' %}" class="gen-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Role *</label>
+                    <select name="role" class="form-input" required>
+                        <option value="STAFF">General Staff</option>
+                        <option value="NURSE">Nurse</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Department *</label>
+                    <select name="department" class="form-input" required>
+                        <option value="">Select department...</option>
+                        {% for code, label in departments %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Designation *</label>
+                    <select name="designation" class="form-input" required>
+                        <option value="">Select designation...</option>
+                        {% for code, label in designations %}
+                        <option value="{{ code }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="gen-btn">
+                    <i class='bx bx-plus'></i> Generate
+                </button>
+                <div class="form-group full">
+                    <label class="form-label">Notes (Optional)</label>
+                    <input type="text" name="notes" class="form-input" placeholder="e.g. Night shift nurse, ICU department..."/>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+            <strong style="font-size:15px;">All Staff Keys</strong>
+            <span style="font-size:13px;color:var(--slate);margin-left:8px;">
+                {{ active_count }} active · {{ used_count }} used
+            </span>
+        </div>
+    </div>
+
+    <div class="keys-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Access Key</th>
+                    <th>Role</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Status</th>
+                    <th>Used By</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key in keys %}
+                <tr>
+                    <td><span class="key-code">{{ key.key }}</span></td>
+                    <td>{{ key.get_role_display }}</td>
+                    <td style="font-size:12px;">{{ key.get_department_display }}</td>
+                    <td style="font-size:12px;">{{ key.get_designation_display }}</td>
+                    <td><span class="status-badge status-{{ key.status }}">{{ key.status }}</span></td>
+                    <td>{% if key.used_by %}{{ key.used_by.get_full_name }}{% else %}—{% endif %}</td>
+                    <td>
+                        {% if key.status == 'ACTIVE' %}
+                        <button class="copy-btn" onclick="copyKey('{{ key.key }}')"><i class='bx bx-copy'></i> Copy</button>
+                        <a href="{% url 'dashboard:revoke_staff_key' key.id %}" class="revoke-btn" onclick="return confirm('Revoke this key?')">Revoke</a>
+                        {% else %}
+                        <span style="color:#CBD5E1;font-size:12px;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--slate);">No keys generated yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function copyKey(key) {
+    navigator.clipboard.writeText(key).then(function() { alert('Key copied: ' + key); });
+}
+</script>
+</body>
+</html>

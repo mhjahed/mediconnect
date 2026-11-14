@@ -1,0 +1,261 @@
+<!-- templates/payments/success.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Payment Successful – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',sans-serif;
+            background:linear-gradient(135deg,#F0FDF4,#DCFCE7,#ECFDF5);
+            min-height:100vh;
+            display:flex; align-items:center; justify-content:center;
+            padding:40px 16px; position:relative; overflow:hidden;
+        }
+
+        /* Confetti canvas */
+        #confetti-canvas {
+            position:fixed; inset:0; pointer-events:none; z-index:0;
+        }
+
+        .success-card {
+            background:white; border-radius:24px;
+            max-width:520px; width:100%;
+            box-shadow:0 32px 80px rgba(16,185,129,0.15);
+            overflow:hidden; position:relative; z-index:1;
+            text-align:center;
+        }
+
+        /* Green hero */
+        .success-hero {
+            background:linear-gradient(135deg,#065F46,#059669,#10B981);
+            padding:48px 36px 40px;
+            position:relative; overflow:hidden;
+        }
+
+        .success-hero::before {
+            content:'';
+            position:absolute; top:-60px; right:-60px;
+            width:200px; height:200px;
+            background:rgba(255,255,255,0.06); border-radius:50%;
+        }
+
+        /* Animated checkmark */
+        .check-circle {
+            width:88px; height:88px;
+            background:rgba(255,255,255,0.15);
+            border:3px solid rgba(255,255,255,0.3);
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:40px; margin:0 auto 20px;
+            animation:checkPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+            box-shadow:0 0 40px rgba(255,255,255,0.2);
+        }
+
+        @keyframes checkPop {
+            0%   { transform:scale(0); }
+            80%  { transform:scale(1.1); }
+            100% { transform:scale(1); }
+        }
+
+        .success-hero h2 { font-size:28px; font-weight:900; color:white; letter-spacing:-0.5px; margin-bottom:6px; }
+        .success-hero p  { font-size:15px; color:rgba(255,255,255,0.75); }
+
+        .success-body { padding:32px 36px; }
+
+        /* Details */
+        .appt-details {
+            background:var(--light); border:1px solid var(--border);
+            border-radius:14px; padding:20px; margin-bottom:24px;
+            text-align:left;
+        }
+
+        .detail-title {
+            font-size:11px; font-weight:700; color:#94A3B8;
+            text-transform:uppercase; letter-spacing:2px; margin-bottom:14px;
+        }
+
+        .detail-row {
+            display:flex; justify-content:space-between;
+            padding:8px 0; border-bottom:1px solid var(--border);
+            font-size:13px;
+        }
+
+        .detail-row:last-child { border-bottom:none; }
+        .detail-label { color:var(--slate); }
+        .detail-value { font-weight:600; color:var(--dark); }
+        .detail-value.green { color:var(--green); }
+
+        /* Waiting for doctor notice */
+        .doctor-notice {
+            background:#EFF6FF; border:1px solid #BFDBFE;
+            border-left:4px solid var(--blue);
+            border-radius:12px; padding:16px 20px;
+            text-align:left; margin-bottom:24px;
+        }
+
+        .doctor-notice p { font-size:13px; color:#1E40AF; font-weight:500; line-height:1.6; }
+        .doctor-notice strong { color:var(--blue); }
+
+        /* Actions */
+        .action-btns { display:flex; flex-direction:column; gap:10px; }
+
+        .btn-primary {
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            padding:14px; border-radius:12px;
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; text-decoration:none;
+            font-size:14px; font-weight:700;
+            transition:all 0.3s;
+            box-shadow:0 6px 20px rgba(37,99,235,0.3);
+        }
+
+        .btn-primary:hover { transform:translateY(-2px); }
+
+        .btn-secondary {
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            padding:14px; border-radius:12px;
+            background:var(--light); border:1px solid var(--border);
+            color:var(--slate); text-decoration:none;
+            font-size:14px; font-weight:600;
+            transition:all 0.2s;
+        }
+
+        .btn-secondary:hover { border-color:var(--blue); color:var(--blue); }
+
+        /* Ref number */
+        .ref-box {
+            background:#F8FAFC; border:1px dashed #CBD5E1;
+            border-radius:10px; padding:12px 20px;
+            margin-bottom:20px;
+            display:flex; justify-content:space-between; align-items:center;
+        }
+
+        .ref-label { font-size:12px; color:#94A3B8; }
+        .ref-value { font-family:'Courier New',monospace; font-size:14px; font-weight:700; color:var(--blue); letter-spacing:1px; }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="success-card">
+
+    <!-- Hero -->
+    <div class="success-hero">
+        <div class="check-circle">✓</div>
+        <h2>Payment Successful! 🎉</h2>
+        <p>Your appointment is confirmed and secured</p>
+    </div>
+
+    <!-- Body -->
+    <div class="success-body">
+
+        <!-- Reference -->
+        <div class="ref-box">
+            <span class="ref-label">🎫 Booking Reference</span>
+            <span class="ref-value">#{{ appointment.id|stringformat:"s"|slice:":8"|upper }}</span>
+        </div>
+
+        <!-- Appointment details -->
+        <div class="appt-details">
+            <div class="detail-title">Appointment Details</div>
+            <div class="detail-row">
+                <span class="detail-label">Doctor</span>
+                <span class="detail-value">Dr. {{ appointment.doctor.get_full_name }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Date</span>
+                <span class="detail-value">{{ appointment.appointment_date|date:"F d, Y" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Time</span>
+                <span class="detail-value">{{ appointment.start_time|time:"g:i A" }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount Paid</span>
+                <span class="detail-value green">✅ ${{ appointment.amount }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value green">Confirmed</span>
+            </div>
+        </div>
+
+        <!-- Notice -->
+        <div class="doctor-notice">
+            <p>
+                📧 <strong>Confirmation emails</strong> will be sent once your doctor sets up the Google Meet link.<br/><br/>
+                ⏰ You'll receive an <strong>automatic reminder 10 minutes</strong> before your session starts.
+            </p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="action-btns">
+            <a href="/dashboard/" class="btn-primary">
+                <i class='bx bxs-dashboard'></i>
+                Go to My Dashboard
+            </a>
+            <a href="/appointments/" class="btn-secondary">
+                <i class='bx bx-calendar'></i>
+                View All Appointments
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<!-- Confetti animation -->
+<script>
+(function() {
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const pieces = [];
+    const colors = ['#2563EB','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899'];
+
+    for (let i = 0; i < 120; i++) {
+        pieces.push({
+            x:     Math.random() * canvas.width,
+            y:     Math.random() * canvas.height - canvas.height,
+            w:     Math.random() * 12 + 4,
+            h:     Math.random() * 6 + 3,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speed: Math.random() * 4 + 2,
+            spin:  Math.random() * 6 - 3,
+            angle: Math.random() * 360,
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+            ctx.save();
+            ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+            ctx.rotate(p.angle * Math.PI / 180);
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+            p.y     += p.speed;
+            p.angle += p.spin;
+            if (p.y > canvas.height) { p.y = -p.h; p.x = Math.random() * canvas.width; }
+        });
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+
+    // Stop confetti after 4 seconds
+    setTimeout(() => { canvas.style.display = 'none'; }, 4000);
+})();
+</script>
+
+</body>
+</html>

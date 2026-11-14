@@ -1,0 +1,147 @@
+<!-- notifications/templates/notifications/email_reminder_doctor.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>⏰ 10-Minute Session Reminder</title>
+<style>
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#F0FDF4; font-family:'Segoe UI', Arial, sans-serif; }
+  .wrapper { background:linear-gradient(160deg,#F0FDF4,#DCFCE7,#ECFDF5); padding:40px 16px; min-height:100vh; }
+
+  .card {
+    background:#FFF; border-radius:24px; max-width:580px;
+    margin:0 auto; overflow:hidden;
+    box-shadow:0 32px 80px rgba(16,185,129,0.15), 0 8px 24px rgba(0,0,0,0.06);
+  }
+
+  .hero {
+    background:linear-gradient(135deg,#064E3B,#065F46,#059669);
+    padding:44px 40px 36px; text-align:center; position:relative;
+  }
+  .urgency-badge {
+    display:inline-block; background:rgba(255,255,255,0.15);
+    border:1px solid rgba(255,255,255,0.3); color:#FFF;
+    font-size:11px; font-weight:800; letter-spacing:3px;
+    text-transform:uppercase; padding:6px 20px; border-radius:100px; margin-bottom:20px;
+  }
+  .countdown-ring {
+    width:100px; height:100px;
+    background:rgba(255,255,255,0.12); border:3px solid rgba(255,255,255,0.35);
+    border-radius:50%; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; margin:0 auto 20px;
+  }
+  .countdown-num { font-size:36px; font-weight:900; color:#FFF; line-height:1; }
+  .countdown-unit { font-size:10px; color:rgba(255,255,255,0.7); font-weight:600; letter-spacing:2px; text-transform:uppercase; }
+
+  .hero h1 { color:#FFF; font-size:26px; font-weight:800; margin-bottom:8px; }
+  .hero p  { color:rgba(255,255,255,0.85); font-size:15px; }
+
+  .body { padding:32px 40px; }
+
+  .alert-bar { background:linear-gradient(90deg,#ECFDF5,#D1FAE5); border:1px solid #A7F3D0; border-left:4px solid #10B981; border-radius:12px; padding:16px 20px; margin-bottom:24px; }
+  .alert-bar p { font-size:14px; color:#065F46; font-weight:600; line-height:1.5; }
+
+  /* Patient card */
+  .patient-pill {
+    background:linear-gradient(135deg,#1E293B,#0F172A);
+    border-radius:14px; padding:20px 24px;
+    display:flex; align-items:center; gap:16px; margin-bottom:24px;
+  }
+  .p-avatar { width:52px; height:52px; background:linear-gradient(135deg,#10B981,#059669); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; color:#FFF; flex-shrink:0; }
+  .p-name { font-size:17px; font-weight:800; color:#FFF; margin-bottom:3px; }
+  .p-email { font-size:12px; color:#94A3B8; }
+
+  .detail-box { background:#F8FAFC; border:1px solid #E2E8F0; border-radius:14px; overflow:hidden; margin-bottom:24px; }
+  .detail-row { display:flex; justify-content:space-between; padding:13px 20px; border-bottom:1px solid #E2E8F0; }
+  .detail-row:last-child { border-bottom:none; }
+  .detail-row:nth-child(even) { background:#FFF; }
+  .dl { font-size:13px; color:#64748B; font-weight:500; }
+  .dv { font-size:13px; color:#1E293B; font-weight:700; }
+
+  .join-btn-wrap { text-align:center; margin-bottom:24px; }
+  .join-btn {
+    display:inline-block;
+    background:linear-gradient(135deg,#059669,#047857);
+    color:#FFF !important; font-size:16px; font-weight:800;
+    padding:18px 48px; border-radius:50px;
+    box-shadow:0 10px 30px rgba(5,150,105,0.4);
+  }
+
+  .url-box { background:#ECFDF5; border:1px solid #A7F3D0; border-radius:8px; padding:10px 16px; text-align:center; font-size:12px; color:#065F46; font-family:'Courier New',monospace; word-break:break-all; margin-bottom:24px; }
+
+  .checklist { list-style:none; }
+  .checklist li { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; margin-bottom:8px; font-size:13px; color:#1E293B; }
+  .ci { width:26px; height:26px; background:#DCFCE7; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+
+  .footer { background:#1E293B; padding:28px 40px; text-align:center; }
+  .footer-logo { font-size:20px; font-weight:900; color:#FFF; margin-bottom:6px; }
+  .footer-logo span { color:#6EE7B7; }
+  .footer-legal { font-size:11px; color:#475569; line-height:1.6; margin-top:16px; }
+
+  @media(max-width:600px) {
+    .hero,.body { padding:28px 16px; }
+    .patient-pill { flex-direction:column; text-align:center; }
+    .detail-row { flex-direction:column; align-items:flex-start; gap:3px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="card">
+
+  <div class="hero">
+    <div class="urgency-badge">🩺 Session Reminder</div>
+    <div class="countdown-ring">
+      <div class="countdown-num">10</div>
+      <div class="countdown-unit">MINS</div>
+    </div>
+    <h1>Consultation Starting Soon</h1>
+    <p>Your patient <strong>{{ patient_name }}</strong><br/>is waiting for your session in 10 minutes.</p>
+  </div>
+
+  <div class="body">
+    <div class="alert-bar">
+      <p>Good day, <strong>{{ doctor_name }}</strong>! 👨‍⚕️ Your upcoming consultation is about to begin. Please prepare your workspace and open Google Meet now.</p>
+    </div>
+
+    <div class="patient-pill">
+      <div class="p-avatar">{{ patient.first_name|slice:":1" }}{{ patient.last_name|slice:":1" }}</div>
+      <div>
+        <div class="p-name">{{ patient_name }}</div>
+        <div class="p-email">{{ patient.email }}</div>
+      </div>
+    </div>
+
+    <div class="detail-box">
+      <div class="detail-row"><span class="dl">📅 Scheduled Time</span><span class="dv">{{ meeting_datetime }}</span></div>
+      <div class="detail-row"><span class="dl">🩺 Specialty</span><span class="dv">{{ specialty }}</span></div>
+      <div class="detail-row"><span class="dl">🎫 Reference</span><span class="dv">#{{ appointment_id }}</span></div>
+    </div>
+
+    <div class="join-btn-wrap">
+      <a href="{{ meet_link }}" class="join-btn">🎥 &nbsp; Open Meet Room</a>
+    </div>
+    <div class="url-box">{{ meet_link }}</div>
+
+    <ul class="checklist">
+      <li><div class="ci">🎤</div> Microphone & camera tested</li>
+      <li><div class="ci">📋</div> Patient medical history reviewed</li>
+      <li><div class="ci">💊</div> Prescription system ready</li>
+      <li><div class="ci">📶</div> Internet connection stable</li>
+    </ul>
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo">Medi<span>Connect</span></div>
+    <div class="footer-legal">
+      © {{ current_year }} MediConnect Health Technologies.<br/>
+      Automated reminder sent to {{ doctor.email }}.
+    </div>
+  </div>
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,469 @@
+<!-- templates/medical_records/create_record.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Write Consultation Notes – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+        }
+
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:900px; margin:0 auto; padding:28px 20px; }
+
+        /* Patient banner */
+        .patient-banner {
+            background:linear-gradient(135deg,var(--dark),#0F172A);
+            border-radius:16px; padding:20px 28px;
+            display:flex; align-items:center; gap:16px;
+            margin-bottom:24px;
+        }
+
+        .p-avatar {
+            width:52px; height:52px;
+            background:linear-gradient(135deg,var(--green),#059669);
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:18px; font-weight:900; color:white; flex-shrink:0;
+        }
+
+        .p-name  { font-size:18px; font-weight:800; color:white; margin-bottom:4px; }
+        .p-meta  { font-size:13px; color:rgba(255,255,255,0.5); }
+
+        /* Section cards */
+        .form-section {
+            background:white; border:1px solid var(--border);
+            border-radius:16px; overflow:hidden; margin-bottom:20px;
+        }
+
+        .section-hdr {
+            padding:16px 22px; border-bottom:1px solid var(--border);
+            background:linear-gradient(90deg,#F8FAFC,#FFFFFF);
+            display:flex; align-items:center; gap:10px;
+        }
+
+        .section-hdr i   { font-size:20px; color:var(--blue); }
+        .section-hdr h3  { font-size:15px; font-weight:800; color:var(--dark); }
+        .section-hdr p   { font-size:12px; color:var(--slate); margin-top:1px; }
+
+        .section-body { padding:22px; }
+
+        /* Form fields */
+        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .form-grid.cols-3 { grid-template-columns:repeat(3,1fr); }
+        .form-grid.cols-5 { grid-template-columns:repeat(5,1fr); }
+        .span-2 { grid-column:1/-1; }
+
+        .form-group { display:flex; flex-direction:column; }
+        .form-label {
+            font-size:12px; font-weight:700; color:var(--slate);
+            text-transform:uppercase; letter-spacing:0.5px;
+            margin-bottom:7px;
+        }
+
+        .form-input {
+            width:100%; padding:11px 14px;
+            border:2px solid var(--border); border-radius:10px;
+            font-size:14px; font-family:'Inter',sans-serif;
+            color:var(--dark); background:var(--light);
+            outline:none; transition:all 0.2s;
+        }
+
+        .form-input:focus { border-color:var(--blue); background:white; }
+        textarea.form-input { resize:vertical; min-height:90px; }
+        select.form-input { cursor:pointer; }
+
+        /* Prescription rows */
+        .rx-row {
+            border:1px solid var(--border); border-radius:12px;
+            padding:16px; margin-bottom:12px;
+            background:var(--light); position:relative;
+        }
+
+        .rx-row-header {
+            display:flex; align-items:center; justify-content:space-between;
+            margin-bottom:14px;
+        }
+
+        .rx-num {
+            width:28px; height:28px; border-radius:50%;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            color:white; font-size:12px; font-weight:800;
+            display:flex; align-items:center; justify-content:center;
+        }
+
+        .delete-rx-btn {
+            background:none; border:none;
+            color:var(--red); font-size:18px; cursor:pointer;
+            padding:4px; line-height:1;
+        }
+
+        .rx-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr; gap:10px; }
+
+        .add-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            background:transparent; color:var(--blue);
+            border:2px dashed rgba(37,99,235,0.3);
+            border-radius:10px; padding:10px 18px;
+            font-size:13px; font-weight:600; cursor:pointer;
+            font-family:'Inter',sans-serif;
+            transition:all 0.2s; width:100%; justify-content:center;
+        }
+
+        .add-btn:hover { border-color:var(--blue); background:rgba(37,99,235,0.04); }
+
+        /* Finalize toggle */
+        .finalize-row {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:18px 22px;
+            background:linear-gradient(90deg,#F0FDF4,white);
+            border-top:1px solid var(--border);
+        }
+
+        .finalize-info h4 { font-size:14px; font-weight:700; color:var(--dark); }
+        .finalize-info p  { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .toggle-switch {
+            position:relative; width:52px; height:28px;
+            cursor:pointer;
+        }
+
+        .toggle-switch input { opacity:0; width:0; height:0; }
+
+        .toggle-slider {
+            position:absolute; inset:0;
+            background:#E2E8F0; border-radius:100px;
+            transition:background 0.3s;
+        }
+
+        .toggle-slider::after {
+            content:'';
+            position:absolute; top:3px; left:3px;
+            width:22px; height:22px; border-radius:50%;
+            background:white; transition:transform 0.3s;
+            box-shadow:0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .toggle-switch input:checked + .toggle-slider { background:var(--green); }
+        .toggle-switch input:checked + .toggle-slider::after { transform:translateX(24px); }
+
+        /* Submit */
+        .submit-row {
+            display:flex; gap:12px; margin-top:24px;
+        }
+
+        .save-btn {
+            flex:1; padding:14px;
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; border:none; border-radius:12px;
+            font-size:15px; font-weight:700; font-family:'Inter',sans-serif;
+            cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;
+            box-shadow:0 6px 20px rgba(37,99,235,0.3);
+        }
+
+        .save-btn:hover { transform:translateY(-2px); }
+
+        .cancel-btn {
+            padding:14px 24px;
+            background:white; border:1px solid var(--border);
+            border-radius:12px; font-size:14px; font-weight:600;
+            color:var(--slate); cursor:pointer; font-family:'Inter',sans-serif;
+            text-decoration:none; display:flex; align-items:center; gap:6px;
+        }
+
+        .cancel-btn:hover { border-color:var(--blue); color:var(--blue); }
+
+        @media(max-width:768px) {
+            .form-grid,.rx-grid,.form-grid.cols-3,.form-grid.cols-5 { grid-template-columns:1fr; }
+            .span-2 { grid-column:1; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="/dashboard/" class="nav-back"><i class='bx bx-arrow-back'></i> Dashboard</a>
+</nav>
+
+<div class="content">
+
+    <!-- Patient banner -->
+    <div class="patient-banner">
+        <div class="p-avatar">
+            {{ patient.first_name|slice:":1" }}{{ patient.last_name|slice:":1" }}
+        </div>
+        <div>
+            <div class="p-name">{{ patient.get_full_name }}</div>
+            <div class="p-meta">
+                📅 {{ appointment.appointment_date|date:"F d, Y" }} ·
+                ⏰ {{ appointment.start_time|time:"g:i A" }} ·
+                📧 {{ patient.email }}
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" id="recordForm">
+        {% csrf_token %}
+
+        {{ rx_formset.management_form }}
+        {{ lab_formset.management_form }}
+
+        <!-- Vitals -->
+        <div class="form-section">
+            <div class="section-hdr">
+                <i class='bx bx-heart-circle'></i>
+                <div>
+                    <h3>Vital Signs</h3>
+                    <p>Patient's current measurements</p>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="form-grid cols-5">
+                    <div class="form-group">
+                        <label class="form-label">Blood Pressure</label>
+                        {{ form.blood_pressure }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pulse Rate</label>
+                        {{ form.pulse_rate }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Temperature</label>
+                        {{ form.temperature }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Weight</label>
+                        {{ form.weight }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">O₂ Saturation</label>
+                        {{ form.oxygen_saturation }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Notes -->
+        <div class="form-section">
+            <div class="section-hdr">
+                <i class='bx bx-notepad'></i>
+                <div>
+                    <h3>Clinical Notes</h3>
+                    <p>History, findings, and diagnosis</p>
+                </div>
+            </div>
+            <div class="section-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Chief Complaint</label>
+                        {{ form.chief_complaint }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">History of Present Illness</label>
+                        {{ form.history_of_illness }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Examination Findings</label>
+                        {{ form.examination_findings }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Diagnosis *</label>
+                        {{ form.diagnosis }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Treatment Plan</label>
+                        {{ form.treatment_plan }}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Follow-up Instructions</label>
+                        {{ form.follow_up_notes }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescriptions -->
+        <div class="form-section">
+            <div class="section-hdr">
+                <i class='bx bx-capsule'></i>
+                <div>
+                    <h3>Prescriptions</h3>
+                    <p>Medications to prescribe</p>
+                </div>
+            </div>
+            <div class="section-body">
+                <div id="rx-container">
+                    {% for rx_form in rx_formset %}
+                    <div class="rx-row">
+                        {% if rx_form.instance.pk %}{{ rx_form.DELETE }}{% endif %}
+                        <div class="rx-row-header">
+                            <div class="rx-num">Rx</div>
+                            <button type="button" class="delete-rx-btn"
+                                    onclick="removeRx(this)">
+                                <i class='bx bx-trash'></i>
+                            </button>
+                        </div>
+                        <div class="rx-grid">
+                            <div class="form-group">
+                                <label class="form-label">Drug Name *</label>
+                                {{ rx_form.drug_name }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Dosage</label>
+                                {{ rx_form.dosage }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Frequency</label>
+                                {{ rx_form.frequency }}
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Duration</label>
+                                <div style="display:flex;gap:6px;">
+                                    {{ rx_form.duration }}
+                                    {{ rx_form.duration_unit }}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Route</label>
+                                {{ rx_form.route }}
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:10px;">
+                            <label class="form-label">Instructions</label>
+                            {{ rx_form.instructions }}
+                        </div>
+                        {% for hidden in rx_form.hidden_fields %}{{ hidden }}{% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" class="add-btn" onclick="addRxRow()">
+                    <i class='bx bx-plus'></i>
+                    Add Another Medication
+                </button>
+            </div>
+        </div>
+
+        <!-- Finalize toggle + save -->
+        <div class="form-section">
+            <div class="finalize-row">
+                <div class="finalize-info">
+                    <h4>Finalize This Record</h4>
+                    <p>Once finalized, patient can view and download this prescription.</p>
+                </div>
+                <label class="toggle-switch">
+                    {{ form.is_finalized }}
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="submit-row">
+            <a href="/dashboard/" class="cancel-btn">
+                <i class='bx bx-x'></i> Cancel
+            </a>
+            <button type="submit" name="action" value="save" class="save-btn">
+                <i class='bx bx-save'></i>
+                Save Consultation Record
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+let rxCount = {{ rx_formset.total_form_count }};
+
+function addRxRow() {
+    const container = document.getElementById('rx-container');
+    const totalForms = document.querySelector('[name="rx-TOTAL_FORMS"]');
+    const idx = rxCount;
+
+    const div = document.createElement('div');
+    div.className = 'rx-row';
+    div.innerHTML = `
+        <div class="rx-row-header">
+            <div class="rx-num">Rx</div>
+            <button type="button" class="delete-rx-btn" onclick="removeRx(this)">
+                <i class='bx bx-trash'></i>
+            </button>
+        </div>
+        <div class="rx-grid">
+            <div class="form-group">
+                <label class="form-label">Drug Name *</label>
+                <input type="text" name="rx-${idx}-drug_name" class="form-input" placeholder="Drug name"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Dosage</label>
+                <input type="text" name="rx-${idx}-dosage" class="form-input" placeholder="500mg"/>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Frequency</label>
+                <select name="rx-${idx}-frequency" class="form-input">
+                    <option value="OD">Once Daily (OD)</option>
+                    <option value="BD">Twice Daily (BD)</option>
+                    <option value="TDS">Three Times (TDS)</option>
+                    <option value="QDS">Four Times (QDS)</option>
+                    <option value="SOS">As Needed (SOS)</option>
+                    <option value="ON">At Night (ON)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Duration</label>
+                <div style="display:flex;gap:6px;">
+                    <input type="number" name="rx-${idx}-duration" class="form-input" value="7" min="1" style="width:60px;"/>
+                    <select name="rx-${idx}-duration_unit" class="form-input">
+                        <option value="DAYS">Days</option>
+                        <option value="WEEKS">Weeks</option>
+                        <option value="MONTHS">Months</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Route</label>
+                <select name="rx-${idx}-route" class="form-input">
+                    <option value="ORAL">Oral</option>
+                    <option value="IV">IV</option>
+                    <option value="IM">IM</option>
+                    <option value="TOPICAL">Topical</option>
+                    <option value="INHALED">Inhaled</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-top:10px;">
+            <label class="form-label">Instructions</label>
+            <textarea name="rx-${idx}-instructions" class="form-input" rows="2"
+                      placeholder="e.g. Take after meals"></textarea>
+        </div>
+        <input type="hidden" name="rx-${idx}-id" value=""/>
+    `;
+
+    container.appendChild(div);
+    rxCount++;
+    totalForms.value = rxCount;
+}
+
+function removeRx(btn) {
+    btn.closest('.rx-row').remove();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!-- templates/includes/notification_bell.html -->
+{% comment %}
+Include this in your topbar/navbar anywhere with:
+{% include 'includes/notification_bell.html' %}
+{% endcomment %}
+
+<style>
+.bell-wrap { position:relative; }
+
+.bell-btn {
+    width:40px; height:40px;
+    border-radius:10px;
+    background:var(--light, #F8FAFC);
+    border:1px solid var(--border, #E2E8F0);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    color:var(--slate, #64748B);
+    cursor:pointer; position:relative;
+    transition:all 0.2s;
+}
+
+.bell-btn:hover {
+    background:#EFF6FF; color:var(--blue, #2563EB);
+    border-color:rgba(37,99,235,0.2);
+}
+
+.bell-count {
+    position:absolute;
+    top:-4px; right:-4px;
+    min-width:18px; height:18px;
+    background:#EF4444; color:white;
+    font-size:10px; font-weight:800;
+    border-radius:100px;
+    display:flex; align-items:center; justify-content:center;
+    border:2px solid white;
+    padding:0 5px;
+    animation:bellPulse 2s ease-in-out infinite;
+}
+
+@keyframes bellPulse {
+    0%,100% { transform:scale(1); }
+    50%     { transform:scale(1.1); }
+}
+
+/* Dropdown */
+.bell-dropdown {
+    position:absolute;
+    top:calc(100% + 8px); right:0;
+    width:380px;
+    background:white;
+    border:1px solid #E2E8F0;
+    border-radius:14px;
+    box-shadow:0 20px 50px rgba(0,0,0,0.15);
+    z-index:1000;
+    overflow:hidden;
+    display:none;
+    animation:dropFade 0.2s ease;
+}
+
+.bell-dropdown.open { display:block; }
+
+@keyframes dropFade {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
+
+.bd-header {
+    padding:14px 18px;
+    border-bottom:1px solid #E2E8F0;
+    display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(90deg,#F8FAFC,white);
+}
+.bd-title { font-size:14px; font-weight:800; color:#1E293B; }
+.bd-mark-all {
+    font-size:11px; color:#2563EB;
+    font-weight:600; cursor:pointer;
+    background:none; border:none;
+    font-family:'Inter',sans-serif;
+}
+.bd-mark-all:hover { text-decoration:underline; }
+
+.bd-list { max-height:400px; overflow-y:auto; }
+.bd-list::-webkit-scrollbar { width:4px; }
+.bd-list::-webkit-scrollbar-thumb { background:#E2E8F0; border-radius:4px; }
+
+.bd-item {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:12px 18px;
+    border-bottom:1px solid #F8FAFC;
+    cursor:pointer;
+    text-decoration:none; color:inherit;
+    transition:background 0.2s;
+}
+.bd-item:last-child { border-bottom:none; }
+.bd-item:hover { background:#F8FAFC; }
+.bd-item.unread { background:#EFF6FF; }
+.bd-item.unread:hover { background:#DBEAFE; }
+
+.bd-icon {
+    font-size:20px;
+    width:36px; height:36px;
+    background:#F8FAFC;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+}
+
+.bd-content { flex:1; min-width:0; }
+.bd-item-title {
+    font-size:13px; font-weight:700;
+    color:#1E293B; margin-bottom:2px;
+    line-height:1.3;
+}
+.bd-item-msg {
+    font-size:12px; color:#64748B;
+    line-height:1.4;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+}
+.bd-time { font-size:10px; color:#CBD5E1; margin-top:4px; }
+
+.bd-empty {
+    text-align:center; padding:40px 20px;
+    color:#94A3B8; font-size:13px;
+}
+.bd-empty-icon { font-size:36px; margin-bottom:8px; opacity:0.4; }
+
+.bd-footer {
+    padding:10px;
+    border-top:1px solid #E2E8F0;
+    background:#FAFAFA;
+}
+.bd-view-all {
+    display:block; text-align:center;
+    padding:8px; border-radius:8px;
+    font-size:12px; font-weight:700;
+    color:#2563EB; text-decoration:none;
+}
+.bd-view-all:hover { background:#EFF6FF; }
+</style>
+
+<div class="bell-wrap" id="bellWrap">
+    <button class="bell-btn" id="bellBtn" onclick="toggleBell(event)">
+        <i class='bx bx-bell'></i>
+        <span class="bell-count" id="bellCount" style="display:none;">0</span>
+    </button>
+
+    <div class="bell-dropdown" id="bellDropdown">
+        <div class="bd-header">
+            <span class="bd-title">🔔 Notifications</span>
+            <button class="bd-mark-all" onclick="markAllReadBell(event)">Mark all read</button>
+        </div>
+        <div class="bd-list" id="bellList">
+            <div class="bd-empty">
+                <div class="bd-empty-icon">⏳</div>
+                Loading...
+            </div>
+        </div>
+        <div class="bd-footer">
+            <a href="/notifications/" class="bd-view-all">View All Notifications →</a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var bellDropdown = document.getElementById('bellDropdown');
+    var bellCount    = document.getElementById('bellCount');
+    var bellList     = document.getElementById('bellList');
+    var refreshInterval = null;
+
+    // Toggle dropdown
+    window.toggleBell = function(e) {
+        e.stopPropagation();
+        bellDropdown.classList.toggle('open');
+        if (bellDropdown.classList.contains('open')) {
+            loadNotifications();
+        }
+    };
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        if (!document.getElementById('bellWrap').contains(e.target)) {
+            bellDropdown.classList.remove('open');
+        }
+    });
+
+    // Load notifications
+    function loadNotifications() {
+        fetch('/notifications/api/list/')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                renderBell(data);
+            })
+            .catch(function(e) {
+                bellList.innerHTML = '<div class="bd-empty">Failed to load</div>';
+            });
+    }
+
+    function renderBell(data) {
+        // Update count
+        if (data.unread_count > 0) {
+            bellCount.style.display = 'flex';
+            bellCount.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+        } else {
+            bellCount.style.display = 'none';
+        }
+
+        // Render list
+        if (data.notifications.length === 0) {
+            bellList.innerHTML = '<div class="bd-empty">' +
+                '<div class="bd-empty-icon">🔕</div>' +
+                'No notifications yet</div>';
+            return;
+        }
+
+        var html = '';
+        data.notifications.forEach(function(n) {
+            var url = n.action_url || '/notifications/open/' + n.id + '/';
+            html += '<a href="/notifications/open/' + n.id + '/" class="bd-item ' +
+                    (n.is_read ? '' : 'unread') + '">' +
+                '<div class="bd-icon">' + n.icon + '</div>' +
+                '<div class="bd-content">' +
+                    '<div class="bd-item-title">' + escapeHtml(n.title) + '</div>' +
+                    '<div class="bd-item-msg">' + escapeHtml(n.message) + '</div>' +
+                    '<div class="bd-time">' + n.time_ago + '</div>' +
+                '</div></a>';
+        });
+        bellList.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        var d = document.createElement('div');
+        d.textContent = str;
+        return d.innerHTML;
+    }
+
+    window.markAllReadBell = function(e) {
+        e.stopPropagation();
+        fetch('/notifications/api/mark-all-read/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookieN('csrftoken') }
+        }).then(function() {
+            loadNotifications();
+        });
+    };
+
+    function getCookieN(name) {
+        var v = '; ' + document.cookie;
+        var p = v.split('; ' + name + '=');
+        if (p.length === 2) return p.pop().split(';').shift();
+        return '';
+    }
+
+    // Initial load
+    loadNotifications();
+
+    // Auto-refresh every 60 seconds
+    setInterval(loadNotifications, 60000);
+})();
+</script>

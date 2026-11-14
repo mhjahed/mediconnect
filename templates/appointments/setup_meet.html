@@ -1,0 +1,230 @@
+<!-- templates/appointments/setup_meet.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Setup Google Meet – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',sans-serif;
+            background:linear-gradient(135deg,#ECFDF5,#D1FAE5);
+            min-height:100vh;
+            display:flex; align-items:center; justify-content:center;
+            padding:40px 16px;
+        }
+
+        .setup-card {
+            background:white; border-radius:24px;
+            max-width:580px; width:100%;
+            box-shadow:0 32px 80px rgba(16,185,129,0.12);
+            overflow:hidden;
+        }
+
+        .setup-header {
+            background:linear-gradient(135deg,#065F46,#059669,#10B981);
+            padding:32px 36px; text-align:center;
+        }
+
+        .meet-icon {
+            width:56px; height:56px;
+            background:rgba(255,255,255,0.15);
+            border:2px solid rgba(255,255,255,0.3);
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:26px; margin:0 auto 14px;
+        }
+
+        .setup-header h2 { font-size:22px; font-weight:800; color:white; margin-bottom:4px; }
+        .setup-header p  { font-size:13px; color:rgba(255,255,255,0.65); }
+
+        .setup-body { padding:32px 36px; }
+
+        /* Patient summary */
+        .patient-summary {
+            background:linear-gradient(135deg,var(--dark),#0F172A);
+            border-radius:14px; padding:18px 20px;
+            display:flex; align-items:center; gap:14px;
+            margin-bottom:24px;
+        }
+
+        .p-avatar {
+            width:48px; height:48px;
+            background:linear-gradient(135deg,var(--green),#059669);
+            border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:18px; font-weight:800; color:white;
+            flex-shrink:0;
+        }
+
+        .p-name  { font-size:16px; font-weight:700; color:white; margin-bottom:2px; }
+        .p-email { font-size:12px; color:#94A3B8; }
+        .p-date  { font-size:12px; color:var(--green); margin-top:2px; }
+
+        /* Form */
+        .form-group { margin-bottom:20px; }
+
+        .form-label {
+            display:block; font-size:13px; font-weight:700;
+            color:var(--dark); margin-bottom:8px;
+        }
+
+        .form-sublabel { font-size:12px; color:var(--slate); font-weight:400; margin-left:4px; }
+
+        .form-input {
+            width:100%; padding:13px 16px;
+            border:2px solid var(--border); border-radius:12px;
+            font-size:14px; font-family:'Inter',sans-serif;
+            color:var(--dark); outline:none;
+            transition:all 0.2s;
+        }
+
+        .form-input:focus { border-color:var(--green); box-shadow:0 0 0 4px rgba(16,185,129,0.08); }
+
+        .meet-link-preview {
+            background:#F0FDF4; border:1px solid #A7F3D0;
+            border-radius:8px; padding:10px 14px;
+            font-size:12px; color:#065F46;
+            font-family:'Courier New',monospace;
+            margin-top:8px; display:none;
+            word-break:break-all;
+        }
+
+        .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+        textarea.form-input { resize:vertical; min-height:100px; }
+
+        .save-btn {
+            width:100%; padding:15px;
+            background:linear-gradient(135deg,#059669,#047857);
+            color:white; border:none; border-radius:12px;
+            font-size:15px; font-weight:700; font-family:'Inter',sans-serif;
+            cursor:pointer; transition:all 0.3s;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            box-shadow:0 8px 24px rgba(5,150,105,0.3);
+        }
+
+        .save-btn:hover { transform:translateY(-2px); box-shadow:0 14px 36px rgba(5,150,105,0.4); }
+
+        .email-note {
+            text-align:center; margin-top:14px;
+            font-size:12px; color:var(--slate);
+            display:flex; align-items:center; justify-content:center; gap:5px;
+        }
+
+        .back-link { text-align:center; margin-top:16px; }
+        .back-link a { font-size:13px; color:var(--slate); text-decoration:none; }
+        .back-link a:hover { color:var(--green); }
+    </style>
+</head>
+<body>
+
+<div class="setup-card">
+
+    <div class="setup-header">
+        <div class="meet-icon">🎥</div>
+        <h2>Setup Google Meet</h2>
+        <p>Set the meeting link — emails will be sent automatically</p>
+    </div>
+
+    <div class="setup-body">
+
+        <!-- Patient info -->
+        <div class="patient-summary">
+            <div class="p-avatar">
+                {{ appointment.patient.first_name|slice:":1" }}{{ appointment.patient.last_name|slice:":1" }}
+            </div>
+            <div>
+                <div class="p-name">{{ appointment.patient.get_full_name }}</div>
+                <div class="p-email">{{ appointment.patient.email }}</div>
+                <div class="p-date">
+                    📅 {{ appointment.appointment_date|date:"F d, Y" }} at {{ appointment.start_time|time:"g:i A" }}
+                </div>
+            </div>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Google Meet Link -->
+            <div class="form-group">
+                <label class="form-label">
+                    🎥 Google Meet Link
+                    <span class="form-sublabel">— Create at meet.google.com/new</span>
+                </label>
+                <input
+                    type="url"
+                    name="meet_link"
+                    class="form-input"
+                    id="meetLinkInput"
+                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                    value="{{ appointment.meet_link|default:'' }}"
+                    required
+                    oninput="previewLink(this.value)"
+                />
+                <div class="meet-link-preview" id="linkPreview"></div>
+                {% if form.meet_link.errors %}
+                <div style="color:#EF4444; font-size:12px; margin-top:6px;">{{ form.meet_link.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Times -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">⏰ Start Time</label>
+                    <input type="time" name="start_time" class="form-input" value="{{ appointment.start_time|time:'H:i' }}" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">⏱️ End Time</label>
+                    <input type="time" name="end_time" class="form-input" value="{{ appointment.end_time|time:'H:i' }}" required/>
+                </div>
+            </div>
+
+            <!-- Notes for patient -->
+            <div class="form-group">
+                <label class="form-label">
+                    📝 Instructions for Patient
+                    <span class="form-sublabel">— Optional</span>
+                </label>
+                <textarea
+                    name="meet_notes"
+                    class="form-input"
+                    placeholder="e.g. Please fast for 2 hours before the call. Have your previous reports ready..."
+                >{{ appointment.meet_notes|default:'' }}</textarea>
+            </div>
+
+            <button type="submit" class="save-btn">
+                <i class='bx bx-send'></i>
+                Save & Send Confirmation Emails
+            </button>
+
+            <div class="email-note">
+                <i class='bx bx-envelope'></i>
+                Confirmation emails will be sent to you and {{ appointment.patient.get_full_name }}
+            </div>
+        </form>
+
+        <div class="back-link">
+            <a href="/dashboard/">← Back to Dashboard</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewLink(val) {
+    const preview = document.getElementById('linkPreview');
+    if (val && val.includes('meet.google.com')) {
+        preview.style.display = 'block';
+        preview.textContent   = '✅ ' + val;
+    } else {
+        preview.style.display = 'none';
+    }
+}
+</script>
+
+</body>
+</html>

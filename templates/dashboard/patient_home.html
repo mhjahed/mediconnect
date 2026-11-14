@@ -1,0 +1,342 @@
+<!-- templates/dashboard/patient_home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Patient Dashboard – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --red:#EF4444; --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+        }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-actions { display:flex; align-items:center; gap:12px; }
+        .nav-pill {
+            display:flex; align-items:center; gap:6px;
+            padding:8px 16px; border-radius:10px;
+            font-size:13px; font-weight:600;
+            text-decoration:none; transition:all 0.2s;
+        }
+        .nav-pill.outline { border:2px solid var(--border); color:var(--slate); background:transparent; }
+        .nav-pill.outline:hover { border-color:var(--blue); color:var(--blue); }
+        .nav-pill.filled  { background:var(--blue); color:white; }
+        .nav-pill.filled:hover { background:#1D4ED8; }
+
+        .content { max-width:1100px; margin:0 auto; padding:32px 20px; }
+
+        .hero-greeting {
+            background:linear-gradient(135deg,var(--dark),#0F172A);
+            border-radius:20px; padding:36px 40px;
+            margin-bottom:28px; display:flex;
+            align-items:center; justify-content:space-between;
+            gap:24px; overflow:hidden; position:relative;
+        }
+        .hero-greeting::before {
+            content:''; position:absolute; top:-60px; right:-60px;
+            width:200px; height:200px;
+            background:rgba(37,99,235,0.1); border-radius:50%;
+        }
+        .greeting-left { position:relative; z-index:1; }
+        .greeting-left h2 { font-size:26px; font-weight:800; color:white; margin-bottom:6px; }
+        .greeting-left p  { font-size:15px; color:rgba(255,255,255,0.55); }
+
+        .book-btn {
+            display:inline-flex; align-items:center; gap:8px;
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; text-decoration:none;
+            padding:14px 28px; border-radius:12px;
+            font-size:14px; font-weight:700;
+            box-shadow:0 8px 24px rgba(37,99,235,0.4);
+            transition:all 0.3s; position:relative; z-index:1; white-space:nowrap;
+        }
+        .book-btn:hover { transform:translateY(-2px); box-shadow:0 14px 36px rgba(37,99,235,0.5); }
+
+        .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:28px; }
+        .stat-card {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; padding:20px;
+            display:flex; align-items:center; gap:16px;
+        }
+        .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+        .stat-icon.blue   { background:#EFF6FF; color:var(--blue); }
+        .stat-icon.green  { background:#ECFDF5; color:var(--green); }
+        .stat-icon.purple { background:#F5F3FF; color:#7C3AED; }
+        .stat-body { flex:1; }
+        .stat-val   { font-size:26px; font-weight:900; color:var(--dark); letter-spacing:-0.5px; }
+        .stat-label { font-size:12px; color:var(--slate); font-weight:500; margin-top:2px; }
+
+        /* Unpaid warning */
+        .unpaid-banner {
+            background:linear-gradient(135deg,#FEF2F2,#FECACA);
+            border:2px solid var(--red); border-left:6px solid var(--red);
+            border-radius:14px; padding:20px 24px;
+            margin-bottom:28px; display:flex;
+            align-items:center; gap:16px; flex-wrap:wrap;
+        }
+        .unpaid-icon { font-size:36px; }
+        .unpaid-info { flex:1; min-width:200px; }
+        .unpaid-title { font-size:16px; font-weight:800; color:#991B1B; margin-bottom:4px; }
+        .unpaid-desc  { font-size:13px; color:#7F1D1D; line-height:1.6; }
+
+        .unpaid-card {
+            background:white; border:1px solid #FECACA;
+            border-radius:14px; padding:16px 20px;
+            margin-bottom:12px; display:flex;
+            align-items:center; justify-content:space-between;
+            gap:14px; flex-wrap:wrap;
+        }
+        .unpaid-left { display:flex; align-items:center; gap:14px; }
+        .unpaid-avatar {
+            width:44px; height:44px;
+            background:linear-gradient(135deg,var(--red),#DC2626);
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            color:white; font-size:14px; font-weight:800; flex-shrink:0;
+        }
+        .unpaid-name { font-size:14px; font-weight:700; color:var(--dark); }
+        .unpaid-meta { font-size:12px; color:var(--slate); }
+        .pay-now-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            background:linear-gradient(135deg,var(--red),#DC2626);
+            color:white; text-decoration:none;
+            padding:10px 20px; border-radius:10px;
+            font-size:13px; font-weight:700; white-space:nowrap;
+        }
+
+        .section-grid { display:grid; grid-template-columns:3fr 2fr; gap:20px; }
+        .section-card { background:white; border:1px solid var(--border); border-radius:16px; overflow:hidden; }
+        .section-header { padding:18px 24px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+        .section-title  { font-size:15px; font-weight:700; color:var(--dark); }
+        .section-sub    { font-size:12px; color:var(--slate); margin-top:2px; }
+        .see-all        { font-size:13px; color:var(--blue); font-weight:600; text-decoration:none; }
+
+        .appt-row {
+            display:flex; align-items:center; gap:14px;
+            padding:14px 24px; border-bottom:1px solid #F8FAFC; transition:background 0.2s;
+        }
+        .appt-row:last-child { border-bottom:none; }
+        .appt-row:hover { background:#F8FAFC; }
+
+        .doc-avatar {
+            width:44px; height:44px; background:linear-gradient(135deg,var(--blue),#3B82F6);
+            border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:800; color:white; flex-shrink:0;
+        }
+        .appt-info { flex:1; min-width:0; }
+        .appt-name { font-size:14px; font-weight:600; color:var(--dark); }
+        .appt-meta { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .join-meet-btn {
+            background:var(--blue); color:white; border:none;
+            border-radius:8px; padding:8px 14px;
+            font-size:12px; font-weight:700;
+            cursor:pointer; text-decoration:none;
+            display:inline-flex; align-items:center; gap:5px; transition:all 0.2s;
+        }
+        .join-meet-btn:hover { background:#1D4ED8; }
+
+        .no-meet-badge { font-size:11px; color:var(--amber); background:#FFFBEB; padding:4px 10px; border-radius:100px; font-weight:600; white-space:nowrap; }
+
+        .empty-state { padding:40px 24px; text-align:center; color:var(--slate); }
+        .empty-icon  { font-size:36px; margin-bottom:10px; opacity:0.4; }
+        .empty-text  { font-size:13px; font-weight:500; }
+        .empty-action { display:inline-block; margin-top:14px; font-size:13px; color:var(--blue); font-weight:600; text-decoration:none; }
+
+        .quick-actions { padding:12px; }
+        .quick-btn {
+            display:flex; align-items:center; gap:12px;
+            padding:12px 16px; border-radius:10px;
+            text-decoration:none; color:var(--dark);
+            font-size:14px; font-weight:500;
+            transition:background 0.2s; margin-bottom:4px;
+        }
+        .quick-btn:hover { background:var(--light); }
+        .quick-btn i { font-size:20px; width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .quick-btn .blue-icon   { background:#EFF6FF; color:var(--blue); }
+        .quick-btn .green-icon  { background:#ECFDF5; color:var(--green); }
+        .quick-btn .purple-icon { background:#F5F3FF; color:#7C3AED; }
+        .quick-btn .amber-icon  { background:#FFFBEB; color:var(--amber); }
+
+        @media(max-width:900px) { .section-grid { grid-template-columns:1fr; } .stats-row { grid-template-columns:1fr 1fr; } }
+        @media(max-width:600px) { .hero-greeting { flex-direction:column; align-items:flex-start; } .stats-row { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <!-- In patient_home.html — add to nav-actions: -->
+    <div class="nav-actions">
+        {% include 'includes/notification_bell.html' %}
+        <a href="{% url 'appointments:home' %}" class="nav-pill outline">
+            <i class='bx bx-calendar'></i> Appointments
+        </a>
+        <a href="{% url 'medical_records:home' %}" class="nav-pill outline">
+            <i class='bx bx-file-medical'></i> Records
+        </a>
+        <a href="{% url 'accounts:logout' %}" class="nav-pill filled">
+            <i class='bx bx-log-out'></i> Logout
+        </a>
+    </div>
+</nav>
+
+<div class="content">
+
+    <!-- Hero greeting -->
+    <div class="hero-greeting">
+        <div class="greeting-left">
+            <h2>Welcome back, {{ user.get_full_name }} 👋</h2>
+            <p>{{ today }} — Stay on top of your health appointments</p>
+        </div>
+        <a href="{% url 'appointments:search' %}" class="book-btn">
+            <i class='bx bx-plus-circle'></i>
+            Book a Consultation
+        </a>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class='bx bx-calendar-check'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ total_consultations }}</div>
+                <div class="stat-label">Total Consultations</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class='bx bx-time'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ upcoming|length }}</div>
+                <div class="stat-label">Upcoming Appointments</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class='bx bx-file-medical'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ past|length }}</div>
+                <div class="stat-label">Past Consultations</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unpaid warning -->
+    {% if has_unpaid %}
+    <div class="unpaid-banner">
+        <div class="unpaid-icon">⚠️</div>
+        <div class="unpaid-info">
+            <div class="unpaid-title">Payment Due – Action Required!</div>
+            <div class="unpaid-desc">
+                You have <strong>unpaid appointments</strong>. Until payment is verified:<br/>
+                ❌ No booking confirmation · ❌ No meeting link · ❌ Records locked
+            </div>
+        </div>
+    </div>
+
+    {% for appt in unpaid_pending %}
+    <div class="unpaid-card">
+        <div class="unpaid-left">
+            <div class="unpaid-avatar">
+                {{ appt.doctor.first_name|slice:":1" }}{{ appt.doctor.last_name|slice:":1" }}
+            </div>
+            <div>
+                <div class="unpaid-name">Dr. {{ appt.doctor.get_full_name }}</div>
+                <div class="unpaid-meta">
+                    📅 {{ appt.appointment_date|date:"F d, Y" }} ·
+                    ⏰ {{ appt.start_time|time:"g:i A" }} ·
+                    ৳{{ appt.amount }}
+                </div>
+            </div>
+        </div>
+        <a href="{% url 'payments:checkout' appt.id %}" class="pay-now-btn">
+            <i class='bx bx-credit-card'></i> Pay Now
+        </a>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Main grid -->
+    <div class="section-grid">
+
+        <!-- Upcoming appointments -->
+        <div class="section-card">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">📅 Upcoming Appointments</div>
+                    <div class="section-sub">Your scheduled consultations</div>
+                </div>
+                <a href="{% url 'appointments:home' %}" class="see-all">View all →</a>
+            </div>
+
+            {% for appt in upcoming %}
+            <div class="appt-row">
+                <div class="doc-avatar">
+                    {{ appt.doctor.first_name|slice:":1" }}{{ appt.doctor.last_name|slice:":1" }}
+                </div>
+                <div class="appt-info">
+                    <div class="appt-name">Dr. {{ appt.doctor.get_full_name }}</div>
+                    <div class="appt-meta">
+                        📅 {{ appt.appointment_date|date:"M d, Y" }} · ⏰ {{ appt.start_time|time:"g:i A" }}
+                        {% if appt.doctor.doctor_profile %} · {{ appt.doctor.doctor_profile.get_specialty_display }}{% endif %}
+                    </div>
+                </div>
+                {% if appt.meet_link %}
+                <a href="{{ appt.meet_link }}" target="_blank" class="join-meet-btn">
+                    <i class='bx bx-video'></i> Join Meet
+                </a>
+                {% else %}
+                <span class="no-meet-badge">⏳ Link Pending</span>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-text">No upcoming appointments</div>
+                <a href="{% url 'appointments:search' %}" class="empty-action">
+                    Book your first consultation →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Quick actions -->
+        <div>
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-title">⚡ Quick Actions</div>
+                </div>
+                <div class="quick-actions">
+                    <a href="{% url 'appointments:search' %}" class="quick-btn">
+                        <i class='bx bx-search-alt blue-icon'></i>
+                        Find a Doctor
+                    </a>
+                    <a href="{% url 'medical_records:home' %}" class="quick-btn">
+                        <i class='bx bx-file-medical green-icon'></i>
+                        View Medical Records
+                    </a>
+                    <a href="{% url 'medical_records:home' %}" class="quick-btn">
+                        <i class='bx bx-capsule purple-icon'></i>
+                        My Prescriptions
+                    </a>
+                    <a href="{% url 'access_control:scanner' %}" class="quick-btn">
+                        <i class='bx bx-scan amber-icon'></i>
+                        Room Access Scanner
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

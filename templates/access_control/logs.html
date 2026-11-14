@@ -1,0 +1,117 @@
+<!-- access_control/templates/access_control/logs.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Access Logs – MediConnect</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root { --blue:#2563EB; --dark:#1E293B; --green:#10B981; --red:#EF4444; --amber:#F59E0B; --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        .topnav { background:white; border-bottom:1px solid var(--border); padding:0 5%; height:64px; display:flex; align-items:center; justify-content:space-between; }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+        .nav-back { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--slate); text-decoration:none; padding:8px 14px; border:1px solid var(--border); border-radius:8px; }
+
+        .content { max-width:1200px; margin:0 auto; padding:28px 20px; }
+        .page-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .page-sub { font-size:14px; color:var(--slate); margin-bottom:24px; }
+
+        .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+        .stat-card { background:white; border:1px solid var(--border); border-radius:14px; padding:20px; text-align:center; }
+        .stat-num { font-size:28px; font-weight:900; }
+        .stat-num.green { color:var(--green); }
+        .stat-num.red   { color:var(--red); }
+        .stat-num.amber { color:var(--amber); }
+        .stat-num.blue  { color:var(--blue); }
+        .stat-lbl { font-size:12px; color:var(--slate); margin-top:4px; font-weight:500; }
+
+        .log-table { width:100%; background:white; border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+        .log-table table { width:100%; border-collapse:collapse; }
+        .log-table th { background:var(--dark); color:white; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:1px; padding:14px 16px; text-align:left; }
+        .log-table td { padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); }
+        .log-table tr:last-child td { border-bottom:none; }
+        .log-table tr:nth-child(even) td { background:#FAFAFA; }
+        .log-table tr:hover td { background:#F0F9FF; }
+
+        .result-badge { padding:4px 10px; border-radius:100px; font-size:11px; font-weight:700; display:inline-block; }
+        .result-badge.GRANTED { background:#ECFDF5; color:var(--green); }
+        .result-badge.DENIED, .result-badge.UNAUTHORIZED_ROLE, .result-badge.NOT_LOGGED_IN { background:#FEF2F2; color:var(--red); }
+        .result-badge.UNKNOWN_CODE { background:#FFFBEB; color:var(--amber); }
+        .result-badge.SCAN_ERROR { background:#F1F5F9; color:var(--slate); }
+
+        .barcode-text { font-family:'Courier New',monospace; font-size:11px; color:var(--blue); max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; display:block; }
+
+        @media(max-width:900px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="/dashboard/" class="nav-back"><i class='bx bx-arrow-back'></i> Dashboard</a>
+</nav>
+
+<div class="content">
+    <h1 class="page-title">🔐 Access Scanner Logs</h1>
+    <p class="page-sub">Real-time log of all barcode scan attempts — also saved to <code>logs/access_log.txt</code></p>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-num blue">{{ total_today }}</div>
+            <div class="stat-lbl">Total Scans Today</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num green">{{ granted_today }}</div>
+            <div class="stat-lbl">Access Granted</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num red">{{ denied_today }}</div>
+            <div class="stat-lbl">Access Denied</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num amber">{{ unknown_today }}</div>
+            <div class="stat-lbl">Unknown Codes</div>
+        </div>
+    </div>
+
+    <div class="log-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Result</th>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Zone</th>
+                    <th>Barcode Text</th>
+                    <th>Format</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp|date:"M d, g:i:s A" }}</td>
+                    <td><span class="result-badge {{ log.access_result }}">{{ log.access_result }}</span></td>
+                    <td>{% if log.user %}{{ log.user.get_full_name }}{% else %}<span style="color:#94A3B8;">Unknown</span>{% endif %}</td>
+                    <td>{% if log.user %}{{ log.user.role }}{% else %}—{% endif %}</td>
+                    <td>{% if log.zone %}{{ log.zone.name }}{% else %}—{% endif %}</td>
+                    <td><span class="barcode-text" title="{{ log.scanned_text }}">{{ log.scanned_text|truncatechars:30 }}</span></td>
+                    <td>{{ log.barcode_format }}</td>
+                    <td style="font-size:11px; color:var(--slate);">{{ log.ip_address|default:"—" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="text-align:center; padding:40px; color:var(--slate);">No scan logs yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: mediconnect
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+      python manage.py seed_data
+      python manage.py seed_zones
+    startCommand: gunicorn mediconnect_project.wsgi:application
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+
+  - type: cron
+    name: send-reminders
+    env: python
+    schedule: "* * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py send_reminders

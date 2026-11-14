@@ -1,0 +1,8 @@
+# Place YOUR audio files here:
+# static/sounds/granted.mp3   ← Your success sound
+# static/sounds/denied.mp3    ← Your denied/error sound
+# static/sounds/scanned.mp3   ← Scan detected beep
+# static/sounds/error.mp3     ← System error sound
+
+# Supported formats: .mp3, .wav, .ogg, .m4a
+# Recommended: .mp3 (works everywhere)

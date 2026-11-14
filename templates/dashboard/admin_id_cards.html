@@ -1,0 +1,373 @@
+<!-- templates/dashboard/admin_id_cards.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Staff ID Cards – MediConnect Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet"/>
+    <style>
+        :root {
+            --blue:#2563EB; --dark:#1E293B; --green:#10B981;
+            --amber:#F59E0B; --red:#EF4444; --purple:#7C3AED;
+            --light:#F8FAFC; --slate:#64748B; --border:#E2E8F0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',sans-serif; background:var(--light); color:var(--dark); }
+
+        /* ── NAV ── */
+        .topnav {
+            background:white; border-bottom:1px solid var(--border);
+            padding:0 5%; height:64px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+        }
+        .nav-logo { font-size:20px; font-weight:900; color:var(--dark); text-decoration:none; }
+        .nav-logo span { color:var(--blue); }
+
+        .nav-back {
+            display:flex; align-items:center; gap:6px;
+            font-size:13px; font-weight:600; color:var(--slate);
+            text-decoration:none; padding:8px 14px;
+            border:1px solid var(--border); border-radius:8px;
+            transition:all 0.2s;
+        }
+        .nav-back:hover { color:var(--blue); border-color:var(--blue); }
+
+        .content { max-width:1200px; margin:0 auto; padding:32px 20px; }
+
+        /* ── Page header ── */
+        .page-header { margin-bottom:28px; }
+        .page-title  { font-size:26px; font-weight:800; margin-bottom:4px; letter-spacing:-0.5px; }
+        .page-sub    { font-size:14px; color:var(--slate); }
+
+        /* ── Stats ── */
+        .stats-grid {
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:16px; margin-bottom:28px;
+        }
+
+        .stat-card {
+            background:white; border:1px solid var(--border);
+            border-radius:14px; padding:20px;
+            display:flex; align-items:center; gap:14px;
+        }
+
+        .stat-icon {
+            width:46px; height:46px; border-radius:12px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:22px; flex-shrink:0;
+        }
+        .stat-icon.blue   { background:#EFF6FF; color:var(--blue); }
+        .stat-icon.green  { background:#ECFDF5; color:var(--green); }
+        .stat-icon.amber  { background:#FFFBEB; color:var(--amber); }
+
+        .stat-body { flex:1; }
+        .stat-val   { font-size:24px; font-weight:900; color:var(--dark); letter-spacing:-0.5px; }
+        .stat-label { font-size:12px; color:var(--slate); font-weight:500; margin-top:2px; }
+
+        /* ── Section ── */
+        .section-card {
+            background:white; border:1px solid var(--border);
+            border-radius:16px; overflow:hidden;
+            margin-bottom:20px;
+        }
+
+        .section-hdr {
+            padding:16px 22px;
+            border-bottom:1px solid var(--border);
+            background:linear-gradient(90deg,#F8FAFC,white);
+            display:flex; align-items:center; gap:10px;
+        }
+        .section-hdr i { font-size:20px; color:var(--blue); }
+        .section-hdr h3 { font-size:15px; font-weight:800; color:var(--dark); flex:1; }
+        .section-hdr .count {
+            background:var(--light); color:var(--slate);
+            font-size:12px; font-weight:700;
+            padding:4px 12px; border-radius:100px;
+        }
+
+        .section-body { padding:0; }
+
+        /* ── Staff awaiting card row ── */
+        .staff-row {
+            display:flex; align-items:center; gap:14px;
+            padding:14px 22px;
+            border-bottom:1px solid var(--border);
+            transition:background 0.2s;
+        }
+        .staff-row:last-child { border-bottom:none; }
+        .staff-row:hover { background:#FAFAFA; }
+
+        .staff-avatar {
+            width:42px; height:42px; border-radius:50%;
+            background:linear-gradient(135deg,var(--blue),#3B82F6);
+            display:flex; align-items:center; justify-content:center;
+            font-size:14px; font-weight:800; color:white;
+            flex-shrink:0;
+        }
+
+        .staff-info { flex:1; min-width:0; }
+        .staff-name { font-size:14px; font-weight:700; color:var(--dark); }
+        .staff-meta { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .role-badge {
+            padding:4px 10px; border-radius:100px;
+            font-size:11px; font-weight:700;
+            background:#EFF6FF; color:var(--blue);
+        }
+        .role-badge.admin { background:#F5F3FF; color:var(--purple); }
+
+        .generate-btn {
+            display:inline-flex; align-items:center; gap:6px;
+            background:linear-gradient(135deg,var(--blue),#1D4ED8);
+            color:white; text-decoration:none;
+            padding:8px 18px; border-radius:9px;
+            font-size:12px; font-weight:700;
+            transition:all 0.2s; white-space:nowrap;
+        }
+        .generate-btn:hover { transform:translateY(-1px); box-shadow:0 6px 16px rgba(37,99,235,0.3); }
+
+        /* ── ID Card row (existing cards) ── */
+        .card-row {
+            display:grid;
+            grid-template-columns:auto 1fr auto auto auto;
+            gap:16px; align-items:center;
+            padding:16px 22px;
+            border-bottom:1px solid var(--border);
+            transition:background 0.2s;
+        }
+        .card-row:last-child { border-bottom:none; }
+        .card-row:hover { background:#FAFAFA; }
+
+        .card-id-display {
+            background:var(--dark);
+            color:#60A5FA;
+            font-family:'Courier New',monospace;
+            font-size:13px; font-weight:700;
+            padding:8px 14px;
+            border-radius:8px;
+            letter-spacing:1px;
+            white-space:nowrap;
+        }
+
+        .card-staff-info { min-width:0; }
+        .card-staff-name { font-size:14px; font-weight:700; color:var(--dark); }
+        .card-staff-meta { font-size:12px; color:var(--slate); margin-top:2px; }
+
+        .zone-count-badge {
+            display:inline-flex; align-items:center; gap:5px;
+            background:#EFF6FF; color:var(--blue);
+            font-size:12px; font-weight:700;
+            padding:5px 12px; border-radius:100px;
+        }
+
+        .status-badge {
+            padding:4px 10px; border-radius:100px;
+            font-size:11px; font-weight:700;
+        }
+        .status-ACTIVE   { background:#ECFDF5; color:var(--green); }
+        .status-EXPIRED  { background:#FEF2F2; color:var(--red); }
+        .status-REVOKED  { background:#F1F5F9; color:var(--slate); }
+        .status-LOST     { background:#FFFBEB; color:var(--amber); }
+
+        .card-actions { display:flex; gap:6px; }
+
+        .action-btn {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:7px 12px; border-radius:8px;
+            font-size:12px; font-weight:600;
+            text-decoration:none; transition:all 0.2s;
+        }
+        .btn-view { background:var(--blue); color:white; }
+        .btn-view:hover { background:#1D4ED8; }
+        .btn-edit { background:var(--light); border:1px solid var(--border); color:var(--slate); }
+        .btn-edit:hover { border-color:var(--blue); color:var(--blue); }
+
+        /* ── Empty state ── */
+        .empty-state {
+            padding:60px 30px; text-align:center;
+            color:var(--slate);
+        }
+        .empty-icon  { font-size:48px; margin-bottom:14px; opacity:0.3; }
+        .empty-title { font-size:16px; font-weight:700; color:var(--dark); margin-bottom:6px; }
+        .empty-sub   { font-size:13px; }
+
+        @media(max-width:768px) {
+            .stats-grid { grid-template-columns:1fr; }
+            .card-row { grid-template-columns:1fr; gap:8px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="/" class="nav-logo">Medi<span>Connect</span></a>
+    <a href="{% url 'dashboard:admin_home' %}" class="nav-back">
+        <i class='bx bx-arrow-back'></i> Admin Panel
+    </a>
+</nav>
+
+<div class="content">
+
+    <!-- Page header -->
+    <div class="page-header">
+        <h1 class="page-title">🎫 Staff ID Cards Management</h1>
+        <p class="page-sub">Generate and manage access ID cards with room permissions</p>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for msg in messages %}
+        <div style="background:{% if msg.tags == 'success' %}#ECFDF5{% elif msg.tags == 'warning' %}#FFFBEB{% else %}#FEF2F2{% endif %};
+                    border:1px solid {% if msg.tags == 'success' %}#A7F3D0{% elif msg.tags == 'warning' %}#FDE68A{% else %}#FECACA{% endif %};
+                    color:{% if msg.tags == 'success' %}#065F46{% elif msg.tags == 'warning' %}#92400E{% else %}#991B1B{% endif %};
+                    border-radius:10px; padding:14px 18px; margin-bottom:20px;
+                    font-size:13px; font-weight:600;">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class='bx bx-id-card'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ total_cards }}</div>
+                <div class="stat-label">Total ID Cards</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class='bx bx-check-shield'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ active_cards }}</div>
+                <div class="stat-label">Active Cards</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class='bx bx-user-plus'></i></div>
+            <div class="stat-body">
+                <div class="stat-val">{{ staff_without_cards|length }}</div>
+                <div class="stat-label">Awaiting Card</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff without cards -->
+    {% if staff_without_cards %}
+    <div class="section-card">
+        <div class="section-hdr">
+            <i class='bx bx-user-plus'></i>
+            <h3>Staff Awaiting ID Card</h3>
+            <span class="count">{{ staff_without_cards|length }} pending</span>
+        </div>
+        <div class="section-body">
+            {% for staff in staff_without_cards %}
+            <div class="staff-row">
+                <div class="staff-avatar">
+                    {{ staff.first_name|slice:":1" }}{{ staff.last_name|slice:":1" }}
+                </div>
+                <div class="staff-info">
+                    <div class="staff-name">
+                        {% if staff.role == 'DOCTOR' %}Dr. {% endif %}{{ staff.get_full_name }}
+                    </div>
+                    <div class="staff-meta">
+                        📧 {{ staff.email }}
+                        {% if staff.doctor_profile %} · 🩺 {{ staff.doctor_profile.get_specialty_display }}{% endif %}
+                    </div>
+                </div>
+                <span class="role-badge {% if staff.role == 'ADMIN' %}admin{% endif %}">
+                    {{ staff.role }}
+                </span>
+                <a href="{% url 'dashboard:generate_id_card' staff.id %}" class="generate-btn">
+                    <i class='bx bx-plus-circle'></i> Generate ID
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Existing ID Cards -->
+    <div class="section-card">
+        <div class="section-hdr">
+            <i class='bx bx-id-card'></i>
+            <h3>All Issued ID Cards</h3>
+            <span class="count">{{ total_cards }} total</span>
+        </div>
+        <div class="section-body">
+
+            {% for card in cards %}
+            <div class="card-row">
+               
+<!-- ID Number with Barcode Image -->
+<div class="id-display">
+    <div class="id-label">Staff ID Number</div>
+    <div class="id-number">{{ card.staff_id_number }}</div>
+    <div class="id-code">Access Code: {{ card.access_code }}</div>
+
+    {% if card.barcode_image %}
+    <!-- ⬇ NEW: Show the auto-generated barcode -->
+    <div style="background:white; border-radius:12px; padding:20px; margin-top:20px; display:inline-block;">
+        <img src="{{ card.barcode_image.url }}"
+             alt="Barcode: {{ card.access_code }}"
+             style="max-width:280px; height:auto;"/>
+        <div style="font-size:11px; color:#64748B; margin-top:8px; font-family:monospace; letter-spacing:1px;">
+            📱 Scan this barcode at any door
+        </div>
+    </div>
+
+    <!-- Download/Print buttons -->
+    <div style="margin-top:14px; display:flex; gap:10px; justify-content:center;">
+        <a href="{{ card.barcode_image.url }}" download="{{ card.staff_id_number }}_barcode.png"
+           style="background:rgba(255,255,255,0.1); color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:5px;">
+            ⬇️ Download Barcode
+        </a>
+        <button onclick="printBarcode()"
+                style="background:rgba(255,255,255,0.1); color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; cursor:pointer; border:none; display:inline-flex; align-items:center; gap:5px;">
+            🖨️ Print
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function printBarcode() {
+    var img = '{{ card.barcode_image.url }}';
+    var w = window.open('', '', 'width=400,height=300');
+    w.document.write('<html><head><title>Barcode - {{ card.staff_id_number }}</title></head>');
+    w.document.write('<body style="text-align:center; padding:20px;">');
+    w.document.write('<h3>{{ card.user.get_full_name }}</h3>');
+    w.document.write('<p>ID: {{ card.staff_id_number }}</p>');
+    w.document.write('<img src="' + img + '" style="max-width:90%;"/>');
+    w.document.write('</body></html>');
+    w.document.close();
+    setTimeout(function() { w.print(); }, 500);
+}
+</script>
+
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <div class="empty-icon">🎫</div>
+                <div class="empty-title">No ID Cards Generated Yet</div>
+                <div class="empty-sub">
+                    {% if staff_without_cards %}
+                    Click "Generate ID" next to any staff member above to create their card.
+                    {% else %}
+                    Add doctors/admins first, then generate their ID cards.
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
